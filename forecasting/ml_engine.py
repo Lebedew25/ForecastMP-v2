@@ -66,6 +66,10 @@ class FeatureEngineer:
         
         # Drop NaN rows created by lag/rolling features
         df = df.dropna()
+
+        # Replace inf / -inf with NaN and drop them to keep XGBoost happy
+        df = df.replace([np.inf, -np.inf], np.nan)
+        df = df.dropna()
         
         return df
 
@@ -162,9 +166,11 @@ class DemandForecaster:
         
         # Prepare historical data
         df = self.feature_engineer.engineer_features(sales_history.copy())
+        # Ensure date is Timestamp for consistent operations
+        df['date'] = pd.to_datetime(df['date'])
         
         forecasts = []
-        last_date = pd.to_datetime(df['date'].max())
+        last_date = df['date'].max()
         
         # Iterative forecasting for multiple days ahead
         for day_ahead in range(1, forecast_days + 1):
@@ -184,7 +190,7 @@ class DemandForecaster:
             confidence_upper = prediction + 1.96 * std_dev
             
             forecasts.append({
-                'forecast_date': forecast_date,
+                'forecast_date': forecast_date.date(),
                 'predicted_quantity': prediction,
                 'confidence_lower': confidence_lower,
                 'confidence_upper': confidence_upper,
@@ -197,6 +203,7 @@ class DemandForecaster:
             new_row['quantity'] = prediction
             df = pd.concat([df, new_row], ignore_index=True)
             df = self.feature_engineer.engineer_features(df)
+            df['date'] = pd.to_datetime(df['date'])
         
         return pd.DataFrame(forecasts)
     
