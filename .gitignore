@@ -4,9 +4,21 @@ __pycache__/
 *$py.class
 *.so
 .Python
-*.egg-info/
-dist/
 build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
 # Django
 *.log
@@ -15,13 +27,16 @@ db.sqlite3
 db.sqlite3-journal
 media/
 staticfiles/
+static/
 
 # Environment
 .env
 .venv
+env/
 venv/
 ENV/
-env/
+env.bak/
+venv.bak/
 
 # IDE
 .vscode/
@@ -29,21 +44,23 @@ env/
 *.swp
 *.swo
 *~
-
-# OS
 .DS_Store
-Thumbs.db
 
 # Celery
 celerybeat-schedule
 celerybeat.pid
 
-# ML Models
-*.pkl
-*.joblib
-*.h5
-
 # Testing
-.pytest_cache/
 .coverage
+.pytest_cache/
 htmlcov/
+
+# Migrations (uncomment if you want to ignore migrations)
+# */migrations/*.py
+# !*/migrations/__init__.py
+
+# Temporary files
+*.tmp
+*.bak
+*.orig
+.cache/

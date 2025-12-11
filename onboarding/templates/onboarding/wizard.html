@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StockPredictor - Onboarding</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .wizard-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            max-width: 800px;
+            width: 100%;
+            overflow: hidden;
+        }
+        .wizard-header {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .wizard-header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        .wizard-header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+        .progress-bar {
+            height: 8px;
+            background: #ecf0f1;
+            position: relative;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+            width: {{ progress }}%;
+        }
+        .wizard-content {
+            padding: 40px;
+        }
+        .step {
+            display: none;
+        }
+        .step.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .step-title {
+            font-size: 24px;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .step-description {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ecf0f1;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        .wizard-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #ecf0f1;
+        }
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        .btn-primary {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        .btn-secondary {
+            background: #ecf0f1;
+            color: #2c3e50;
+        }
+        .btn-secondary:hover {
+            background: #d5d8dc;
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .success-message {
+            text-align: center;
+            padding: 40px;
+        }
+        .success-icon {
+            font-size: 64px;
+            color: #27ae60;
+            margin-bottom: 20px;
+        }
+        .file-upload {
+            border: 2px dashed #ecf0f1;
+            border-radius: 6px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .file-upload:hover {
+            border-color: #667eea;
+            background: #f8f9fa;
+        }
+        .file-upload input {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="wizard-container">
+        <div class="wizard-header">
+            <h1>📦 Welcome to StockPredictor</h1>
+            <p>Let's set up your inventory management system</p>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar"></div>
+        </div>
+        
+        <div class="wizard-content">
+            <form id="onboardingForm" method="post">
+                {% csrf_token %}
+                
+                <!-- Step 1: Company Profile -->
+                <div class="step active" data-step="1">
+                    <h2 class="step-title">Company Profile</h2>
+                    <p class="step-description">Tell us about your company and configure basic settings</p>
+                    
+                    <div class="form-group">
+                        <label for="company_name">Company Name *</label>
+                        <input type="text" id="company_name" name="company_name" required>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="currency">Currency *</label>
+                            <select id="currency" name="currency" required>
+                                <option value="USD">USD - US Dollar</option>
+                                <option value="EUR">EUR - Euro</option>
+                                <option value="RUB" selected>RUB - Russian Ruble</option>
+                                <option value="GBP">GBP - British Pound</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="timezone">Timezone *</label>
+                            <select id="timezone" name="timezone" required>
+                                <option value="UTC">UTC</option>
+                                <option value="Europe/Moscow" selected>Moscow</option>
+                                <option value="Europe/London">London</option>
+                                <option value="America/New_York">New York</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="low_stock_threshold">Low Stock Threshold (days) *</label>
+                        <input type="number" id="low_stock_threshold" name="low_stock_threshold" value="7" min="1" required>
+                    </div>
+                </div>
+                
+                <!-- Step 2: Warehouse Configuration -->
+                <div class="step" data-step="2">
+                    <h2 class="step-title">Warehouse Configuration</h2>
+                    <p class="step-description">Set up your warehouses for inventory tracking</p>
+                    
+                    <div class="form-group">
+                        <label for="warehouse_name">Primary Warehouse Name *</label>
+                        <input type="text" id="warehouse_name" name="warehouse_name" placeholder="e.g., Main Warehouse" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="add_ozon_warehouse" name="add_ozon_warehouse">
+                            Add Ozon Fulfillment Warehouse
+                        </label>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="add_wb_warehouse" name="add_wb_warehouse">
+                            Add Wildberries Fulfillment Warehouse
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Step 3: Marketplace Integration -->
+                <div class="step" data-step="3">
+                    <h2 class="step-title">Marketplace Integration</h2>
+                    <p class="step-description">Connect your marketplace accounts</p>
+                    
+                    <h3 style="margin-bottom: 15px;">Ozon Seller API</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="ozon_client_id">Client ID</label>
+                            <input type="text" id="ozon_client_id" name="ozon_client_id">
+                        </div>
+                        <div class="form-group">
+                            <label for="ozon_api_key">API Key</label>
+                            <input type="text" id="ozon_api_key" name="ozon_api_key">
+                        </div>
+                    </div>
+                    
+                    <h3 style="margin: 30px 0 15px;">Website Integration (Optional)</h3>
+                    <div class="form-group">
+                        <label for="website_url">Website API URL</label>
+                        <input type="url" id="website_url" name="website_url" placeholder="https://mystore.com/api">
+                    </div>
+                </div>
+                
+                <!-- Step 4: Product Catalog -->
+                <div class="step" data-step="4">
+                    <h2 class="step-title">Product Catalog</h2>
+                    <p class="step-description">Import your product catalog</p>
+                    
+                    <div class="file-upload" onclick="document.getElementById('product_file').click()">
+                        <input type="file" id="product_file" name="product_file" accept=".csv,.xlsx">
+                        <p>📁 Click to upload CSV or Excel file</p>
+                        <p style="color: #7f8c8d; margin-top: 10px; font-size: 14px;">
+                            Or skip this step to add products later
+                        </p>
+                    </div>
+                    
+                    <p id="fileName" style="margin-top: 15px; color: #27ae60;"></p>
+                </div>
+                
+                <!-- Step 5: Completion -->
+                <div class="step" data-step="5">
+                    <div class="success-message">
+                        <div class="success-icon">✅</div>
+                        <h2 class="step-title">Setup Complete!</h2>
+                        <p class="step-description">
+                            Your inventory management system is ready to use.
+                            We're now synchronizing your data...
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="wizard-actions">
+                    <button type="button" class="btn btn-secondary" id="prevBtn" onclick="changeStep(-1)">
+                        ← Previous
+                    </button>
+                    <button type="button" class="btn btn-primary" id="nextBtn" onclick="changeStep(1)">
+                        Next →
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        let currentStep = 1;
+        const totalSteps = 5;
+        
+        function updateProgress() {
+            const progress = (currentStep / totalSteps) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+        }
+        
+        function showStep(step) {
+            document.querySelectorAll('.step').forEach(el => el.classList.remove('active'));
+            document.querySelector(`[data-step="${step}"]`).classList.add('active');
+            
+            document.getElementById('prevBtn').style.display = step === 1 ? 'none' : 'block';
+            
+            if (step === totalSteps) {
+                document.getElementById('nextBtn').textContent = 'Go to Dashboard →';
+                document.getElementById('nextBtn').onclick = function() {
+                    window.location.href = '/dashboard/';
+                };
+            } else {
+                document.getElementById('nextBtn').textContent = 'Next →';
+                document.getElementById('nextBtn').onclick = function() { changeStep(1); };
+            }
+            
+            updateProgress();
+        }
+        
+        function changeStep(direction) {
+            const newStep = currentStep + direction;
+            
+            if (newStep < 1 || newStep > totalSteps) return;
+            
+            if (direction > 0 && currentStep === 4) {
+                submitForm();
+            }
+            
+            currentStep = newStep;
+            showStep(currentStep);
+        }
+        
+        function submitForm() {
+            const formData = new FormData(document.getElementById('onboardingForm'));
+            
+            fetch('/api/onboarding/submit/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Onboarding completed successfully');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+        
+        document.getElementById('product_file').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                document.getElementById('fileName').textContent = '✓ Selected: ' + e.target.files[0].name;
+            }
+        });
+        
+        updateProgress();
+    </script>
+</body>
+</html>

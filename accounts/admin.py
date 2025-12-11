@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import Company, User, Permission
+from .models import Company, User, Permission, TelegramSubscription
 
 
 @admin.register(Company)
@@ -71,5 +71,32 @@ class PermissionAdmin(admin.ModelAdmin):
         }),
         ('Timestamps', {
             'fields': ('created_at',)
+        }),
+    )
+
+
+@admin.register(TelegramSubscription)
+class TelegramSubscriptionAdmin(admin.ModelAdmin):
+    list_display = ['user', 'chat_id', 'critical_alerts_enabled', 'daily_digest_enabled', 'is_active']
+    list_filter = ['critical_alerts_enabled', 'daily_digest_enabled', 'weekly_report_enabled', 'is_active']
+    search_fields = ['user__email', 'chat_id']
+    readonly_fields = ['id', 'created_at', 'updated_at']
+    
+    fieldsets = (
+        (None, {
+            'fields': ('id', 'user', 'chat_id', 'is_active')
+        }),
+        ('Notification Preferences', {
+            'fields': (
+                'critical_alerts_enabled',
+                'daily_digest_enabled',
+                'weekly_report_enabled',
+                'digest_time',
+                'custom_threshold_days'
+            )
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
         }),
     )

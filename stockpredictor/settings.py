@@ -51,6 +51,10 @@ INSTALLED_APPS = [
     'integrations',
     'forecasting',
     'procurement',
+    'telegram_notifications',
+    'export',
+    'dashboard',
+    'onboarding',
 ]
 
 MIDDLEWARE = [
@@ -88,16 +92,27 @@ WSGI_APPLICATION = 'stockpredictor.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='stockpredictor'),
-        'USER': config('DB_USER', default='postgres'),
-        'PASSWORD': config('DB_PASSWORD', default='postgres'),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='5432'),
+# For development, we can use SQLite. For production, use PostgreSQL.
+USE_SQLITE = config('USE_SQLITE', default=True, cast=bool)
+
+if USE_SQLITE:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': config('DB_NAME', default='stockpredictor'),
+            'USER': config('DB_USER', default='postgres'),
+            'PASSWORD': config('DB_PASSWORD', default='postgres'),
+            'HOST': config('DB_HOST', default='localhost'),
+            'PORT': config('DB_PORT', default='5432'),
+        }
+    }
 
 
 # Password validation
@@ -185,6 +200,14 @@ CELERY_BEAT_SCHEDULE = {
     'analyze-procurement': {
         'task': 'procurement.tasks.analyze_all_procurement',
         'schedule': crontab(hour=7, minute=30),  # 7:30 AM daily
+    },
+    'send-daily-digest': {
+        'task': 'telegram_notifications.tasks.generate_daily_digest',
+        'schedule': crontab(hour=8, minute=0),  # 8:00 AM daily
+    },
+    'send-weekly-report': {
+        'task': 'telegram_notifications.tasks.generate_weekly_report',
+        'schedule': crontab(day_of_week=1, hour=9, minute=0),  # Monday 9:00 AM weekly
     },
 }
 

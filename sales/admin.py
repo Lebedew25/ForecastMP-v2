@@ -1,5 +1,36 @@
 from django.contrib import admin
-from .models import SalesTransaction, DailySalesAggregate, SalesHistory, InventorySnapshot
+from .models import (
+    Warehouse,
+    SalesTransaction,
+    DailySalesAggregate,
+    SalesHistory,
+    InventorySnapshot,
+    InventoryMovement
+)
+
+
+@admin.register(Warehouse)
+class WarehouseAdmin(admin.ModelAdmin):
+    list_display = ['name', 'company', 'warehouse_type', 'marketplace', 'is_primary', 'is_active']
+    list_filter = ['warehouse_type', 'marketplace', 'is_primary', 'is_active']
+    search_fields = ['name', 'company__name']
+    readonly_fields = ['id', 'created_at', 'updated_at']
+    
+    fieldsets = (
+        (None, {
+            'fields': ('id', 'company', 'name', 'warehouse_type')
+        }),
+        ('Marketplace Info', {
+            'fields': ('marketplace', 'is_primary')
+        }),
+        ('Settings', {
+            'fields': ('metadata', 'is_active')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
 
 
 @admin.register(SalesTransaction)
@@ -76,11 +107,35 @@ class SalesHistoryAdmin(admin.ModelAdmin):
     )
 
 
+@admin.register(InventoryMovement)
+class InventoryMovementAdmin(admin.ModelAdmin):
+    list_display = ['product', 'warehouse', 'movement_type', 'quantity', 'movement_date', 'created_by']
+    list_filter = ['movement_type', 'reference_type', 'movement_date']
+    search_fields = ['product__sku', 'product__name', 'warehouse__name', 'notes']
+    readonly_fields = ['id', 'created_at']
+    date_hierarchy = 'movement_date'
+    
+    fieldsets = (
+        (None, {
+            'fields': ('id', 'product', 'warehouse', 'movement_type')
+        }),
+        ('Movement Details', {
+            'fields': ('quantity', 'movement_date')
+        }),
+        ('Reference', {
+            'fields': ('reference_type', 'reference_id', 'notes')
+        }),
+        ('Audit', {
+            'fields': ('created_by', 'created_at')
+        }),
+    )
+
+
 @admin.register(InventorySnapshot)
 class InventorySnapshotAdmin(admin.ModelAdmin):
-    list_display = ['product', 'snapshot_date', 'quantity_available', 'quantity_reserved', 'warehouse_id']
-    list_filter = ['snapshot_date', 'warehouse_id']
-    search_fields = ['product__sku', 'product__name']
+    list_display = ['product', 'snapshot_date', 'quantity_available', 'quantity_reserved', 'warehouse']
+    list_filter = ['snapshot_date', 'warehouse']
+    search_fields = ['product__sku', 'product__name', 'warehouse__name']
     readonly_fields = ['id', 'created_at']
     date_hierarchy = 'snapshot_date'
     
@@ -92,7 +147,7 @@ class InventorySnapshotAdmin(admin.ModelAdmin):
             'fields': ('quantity_available', 'quantity_reserved')
         }),
         ('Warehouse', {
-            'fields': ('warehouse_id', 'warehouse_data')
+            'fields': ('warehouse', 'legacy_warehouse_id', 'warehouse_data')
         }),
         ('Timestamp', {
             'fields': ('created_at',)

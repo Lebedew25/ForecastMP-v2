@@ -21,5 +21,10 @@ from django.shortcuts import redirect
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', lambda request: redirect('procurement:dashboard')),
+    path('onboarding/', include('onboarding.urls')),
     path('dashboard/', include('procurement.urls')),
+    path('sales/', include('sales.urls')),
+    path('telegram/', include('telegram_notifications.urls')),
+    path('export/', include('export.urls')),
+    path('api/', include('dashboard.urls')),
 ]

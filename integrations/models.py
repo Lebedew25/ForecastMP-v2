@@ -9,6 +9,7 @@ class MarketplaceCredential(models.Model):
     MARKETPLACE_CHOICES = [
         ('WILDBERRIES', 'Wildberries'),
         ('OZON', 'Ozon'),
+        ('WEBSITE', 'Website/E-commerce'),
     ]
     
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

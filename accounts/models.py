@@ -2,6 +2,7 @@ import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.utils import timezone
+from datetime import time
 
 
 class Company(models.Model):
@@ -150,3 +151,50 @@ class Permission(models.Model):
     def __str__(self):
         grant_status = 'allowed' if self.is_granted else 'denied'
         return f"{self.user.email} - {grant_status} {self.action} on {self.resource}"
+
+
+class TelegramSubscription(models.Model):
+    """Telegram bot subscription for notifications"""
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='telegram_subscription'
+    )
+    chat_id = models.CharField(
+        max_length=255,
+        unique=True,
+        help_text='Telegram chat ID for this user'
+    )
+    
+    # Notification preferences
+    critical_alerts_enabled = models.BooleanField(default=True)
+    daily_digest_enabled = models.BooleanField(default=True)
+    weekly_report_enabled = models.BooleanField(default=True)
+    
+    digest_time = models.TimeField(
+        default=time(8, 0),  # 8:00 AM
+        help_text='Time to send daily digest'
+    )
+    
+    custom_threshold_days = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text='Custom alert threshold, overrides company default'
+    )
+    
+    is_active = models.BooleanField(default=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['user']
+        indexes = [
+            models.Index(fields=['chat_id']),
+            models.Index(fields=['user', 'is_active']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.email} - Telegram: {self.chat_id}"

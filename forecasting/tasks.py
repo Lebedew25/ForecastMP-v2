@@ -8,6 +8,7 @@ import pandas as pd
 import logging
 from .models import Forecast, ForecastAccuracy
 from .ml_engine import DemandForecaster
+from .simple_forecast import generate_simple_forecasts_for_company, generate_simple_forecast_for_product
 from products.models import Product
 from sales.models import SalesHistory, DailySalesAggregate
 from accounts.models import Company
@@ -241,3 +242,64 @@ def cleanup_old_forecasts(days_to_keep=90):
         'deleted_count': deleted_count,
         'cutoff_date': cutoff_date.isoformat()
     }
+
+
+@shared_task
+def generate_all_simple_forecasts():
+    """Generate simple forecasts for all active companies and products"""
+    companies = Company.objects.filter(is_active=True)
+    
+    results = []
+    for company in companies:
+        try:
+            result = generate_simple_company_forecasts.delay(company.id)
+            results.append({
+                'company_id': str(company.id),
+                'company_name': company.name,
+                'task_id': result.id
+            })
+        except Exception as e:
+            logger.error(f"Failed to queue simple forecast for {company}: {str(e)}")
+    
+    return {
+        'total_companies': len(results),
+        'results': results
+    }
+
+
+@shared_task
+def generate_simple_company_forecasts(company_id):
+    """Generate simple forecasts for all products in a company"""
+    try:
+        result = generate_simple_forecasts_for_company(company_id)
+        return {
+            'status': 'success',
+            'company_id': company_id,
+            'success_count': result['success_count'],
+            'failure_count': result['failure_count']
+        }
+    except Exception as e:
+        logger.error(f"Failed to generate simple forecasts for company {company_id}: {str(e)}")
+        return {
+            'status': 'error',
+            'company_id': company_id,
+            'error': str(e)
+        }
+
+
+@shared_task
+def generate_simple_product_forecast(product_id):
+    """Generate simple forecast for a single product"""
+    try:
+        success = generate_simple_forecast_for_product(product_id)
+        return {
+            'status': 'success' if success else 'failed',
+            'product_id': product_id
+        }
+    except Exception as e:
+        logger.error(f"Failed to generate simple forecast for product {product_id}: {str(e)}")
+        return {
+            'status': 'error',
+            'product_id': product_id,
+            'error': str(e)
+        }
