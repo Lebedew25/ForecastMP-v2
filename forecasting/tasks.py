@@ -89,14 +89,17 @@ def generate_product_forecast(product_id):
     # Get historical sales data
     sales_history = prepare_sales_history(product)
     
-    # Check if we have sufficient data
-    if len(sales_history) < 30:
-        logger.info(f"Insufficient data for {product.sku} ({len(sales_history)} days)")
+    # Check if we have any data at all
+    if len(sales_history) == 0:
+        logger.info(f"No sales data available for {product.sku}")
         return {
             'status': 'skipped',
-            'reason': 'insufficient_data',
-            'days_available': len(sales_history)
+            'reason': 'no_sales_data',
+            'days_available': 0
         }
+    
+    # Log data availability
+    logger.info(f"Found {len(sales_history)} days of sales data for {product.sku}")
     
     try:
         # Initialize forecaster
