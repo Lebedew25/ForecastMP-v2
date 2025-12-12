@@ -15,16 +15,22 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.shortcuts import redirect
+from django.views.generic import TemplateView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', lambda request: redirect('procurement:dashboard')),
-    path('onboarding/', include('onboarding.urls')),
-    path('dashboard/', include('procurement.urls')),
-    path('sales/', include('sales.urls')),
-    path('telegram/', include('telegram_notifications.urls')),
-    path('export/', include('export.urls')),
-    path('api/', include('dashboard.urls')),
+    # API endpoints
+    path('api/auth/', include('accounts.urls')),
+    path('api/dashboard/', include('dashboard.urls')),
+    path('api/products/', include('products.urls')),
+    path('api/inventory/', include('sales.urls')),
+    path('api/telegram/', include('telegram_notifications.urls')),
+    path('api/export/', include('export.urls')),
+    # Legacy HTML views (keep for backward compatibility)
+    path('legacy/onboarding/', include('onboarding.urls')),
+    path('legacy/dashboard/', include('procurement.urls')),
+    # React SPA - catch all routes and serve index.html
+    re_path(r'^.*$', TemplateView.as_view(template_name='index.html'), name='react-app'),
 ]

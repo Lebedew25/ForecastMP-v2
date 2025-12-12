@@ -2,6 +2,23 @@
 
 Multi-tenant SaaS platform for marketplace sellers to manage inventory, track sales, forecast demand, and automate procurement recommendations across multiple marketplaces (Wildberries, Ozon, custom websites).
 
+## ⚡ Quick Start
+
+**Новый React интерфейс доступен!** См. [QUICKSTART_REACT.md](QUICKSTART_REACT.md) для запуска.
+
+```powershell
+# Terminal 1 - Django Backend
+.\venv\Scripts\Activate.ps1
+python manage.py runserver
+
+# Terminal 2 - React Frontend
+cd frontend
+npm install
+npm run dev
+
+# Откройте http://localhost:5174
+```
+
 ## 🚀 Features
 
 ### Core Functionality
@@ -21,12 +38,21 @@ Multi-tenant SaaS platform for marketplace sellers to manage inventory, track sa
 
 ## 📋 Tech Stack
 
-- **Backend**: Django 4.2 + Django REST Framework
+### Backend
+- **Framework**: Django 4.2 + Django REST Framework
 - **Database**: SQLite (dev) / PostgreSQL (production)
 - **Task Queue**: Celery + Redis
 - **Forecasting**: Simplified moving average (no ML dependencies)
 - **Notifications**: Telegram Bot API
 - **File Processing**: openpyxl (Excel), reportlab (PDF)
+
+### Frontend (NEW! ✨)
+- **Framework**: React 18 + TypeScript
+- **UI Library**: Ant Design 5
+- **State Management**: Redux Toolkit
+- **Routing**: React Router 6
+- **Charts**: Recharts
+- **Build Tool**: Vite
 
 ## 🏗️ Project Structure
 
@@ -42,6 +68,14 @@ ForecastMP-v2/
 ├── export/                # Export generation (Excel, PDF, CSV)
 ├── dashboard/             # Dashboard metrics and analytics
 ├── onboarding/            # User onboarding wizard
+├── frontend/              # React SPA (NEW!)
+│   ├── src/
+│   │   ├── components/   # Reusable UI components
+│   │   ├── pages/        # Page components
+│   │   ├── store/        # Redux store
+│   │   ├── services/     # API client
+│   │   └── types/        # TypeScript types
+│   └── vite.config.ts
 └── stockpredictor/        # Django project settings
 ```
 
