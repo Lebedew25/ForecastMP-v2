@@ -1,12 +1,17 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ConfigProvider, App as AntApp } from 'antd';
+import ruRU from 'antd/locale/ru_RU';
 import { Provider } from 'react-redux';
 import { store } from './store';
 import { useAppDispatch, useAppSelector } from './store/hooks';
 import { fetchCurrentUser } from './store/slices/authSlice';
 import ErrorBoundary from './components/shared/ErrorBoundary';
 import { useNotifications } from './utils/notifications';
+import dayjs from 'dayjs';
+import 'dayjs/locale/ru';
+
+dayjs.locale('ru');
 
 // Layouts
 import MainLayout from './components/layout/MainLayout';
@@ -51,7 +56,7 @@ function AppRoutes() {
         alignItems: 'center', 
         height: '100vh' 
       }}>
-        Loading...
+        Загрузка...
       </div>
     );
   }
@@ -94,7 +99,7 @@ function App() {
   return (
     <ErrorBoundary>
       <Provider store={store}>
-        <ConfigProvider theme={theme}>
+        <ConfigProvider theme={theme} locale={ruRU}>
           <AntApp>
             <BrowserRouter>
               <AppRoutes />

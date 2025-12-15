@@ -43,35 +43,35 @@ const Products: React.FC = () => {
       render: (sku: string) => <Text strong>{sku}</Text>,
     },
     {
-      title: 'Product Name',
+      title: 'Название товара',
       dataIndex: 'name',
       key: 'name',
       width: 250,
       ellipsis: true,
     },
     {
-      title: 'Category',
+      title: 'Категория',
       dataIndex: 'category',
       key: 'category',
       width: 150,
       render: (category: string) => category || <Text type="secondary">—</Text>,
     },
     {
-      title: 'Total Stock',
+      title: 'Всего на складе',
       key: 'total_stock',
       width: 120,
       align: 'right',
       render: () => Math.floor(Math.random() * 500), // Mock data
     },
     {
-      title: 'My Warehouse',
+      title: 'Мой склад',
       key: 'my_stock',
       width: 120,
       align: 'right',
       render: () => Math.floor(Math.random() * 200), // Mock data
     },
     {
-      title: 'Forecast Depletion',
+      title: 'Прогноз истощения',
       key: 'forecast',
       width: 140,
       render: () => {
@@ -80,7 +80,7 @@ const Products: React.FC = () => {
       },
     },
     {
-      title: 'Cost Price',
+      title: 'Себестоимость',
       key: 'cost_price',
       width: 120,
       align: 'right',
@@ -91,7 +91,7 @@ const Products: React.FC = () => {
       ),
     },
     {
-      title: 'Selling Price',
+      title: 'Цена продажи',
       key: 'selling_price',
       width: 120,
       align: 'right',
@@ -102,13 +102,13 @@ const Products: React.FC = () => {
       ),
     },
     {
-      title: 'Status',
+      title: 'Статус',
       dataIndex: 'is_active',
       key: 'status',
       width: 100,
       render: (active: boolean) => (
         <Tag color={active ? 'success' : 'default'}>
-          {active ? 'Active' : 'Inactive'}
+          {active ? 'Активен' : 'Неактивен'}
         </Tag>
       ),
     },
@@ -117,44 +117,44 @@ const Products: React.FC = () => {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <Title level={2} style={{ margin: 0 }}>Products</Title>
+        <Title level={2} style={{ margin: 0 }}>Товары</Title>
         <Space>
-          <Button icon={<DownloadOutlined />}>Export</Button>
-          <Button type="primary" icon={<PlusOutlined />}>Import Products</Button>
+          <Button icon={<DownloadOutlined />}>Экспорт</Button>
+          <Button type="primary" icon={<PlusOutlined />}>Импорт товаров</Button>
         </Space>
       </div>
 
       {/* Filters */}
       <Space style={{ marginBottom: '16px', width: '100%' }} wrap>
         <Search
-          placeholder="Search by SKU or name"
+          placeholder="Поиск по SKU или названию"
           onSearch={handleSearch}
           style={{ width: 300 }}
           enterButton={<SearchOutlined />}
         />
         <Select
-          placeholder="Stock Status"
+          placeholder="Статус остатков"
           style={{ width: 150 }}
           onChange={handleStockFilter}
           allowClear
           options={[
-            { value: 'all', label: 'All Products' },
-            { value: 'low_stock', label: 'Low Stock' },
-            { value: 'out_of_stock', label: 'Out of Stock' },
-            { value: 'no_movement', label: 'No Movement' },
+            { value: 'all', label: 'Все товары' },
+            { value: 'low_stock', label: 'Низкий остаток' },
+            { value: 'out_of_stock', label: 'Нет на складе' },
+            { value: 'no_movement', label: 'Нет движения' },
           ]}
         />
         <Select
-          placeholder="Category"
+          placeholder="Категория"
           style={{ width: 150 }}
           allowClear
           options={[
-            { value: 'electronics', label: 'Electronics' },
-            { value: 'clothing', label: 'Clothing' },
-            { value: 'food', label: 'Food' },
+            { value: 'electronics', label: 'Электроника' },
+            { value: 'clothing', label: 'Одежда' },
+            { value: 'food', label: 'Продукты' },
           ]}
         />
-        <Button icon={<FilterOutlined />}>More Filters</Button>
+        <Button icon={<FilterOutlined />}>Больше фильтров</Button>
       </Space>
 
       {/* Products Table */}
@@ -170,22 +170,22 @@ const Products: React.FC = () => {
         })}
         pagination={{
           showSizeChanger: true,
-          showTotal: (total) => `Total ${total} products`,
+          showTotal: (total) => `Всего ${total} товаров`,
         }}
       />
 
       {/* Product Detail Modal */}
       <Modal
-        title="Product Details"
+        title="Подробности товара"
         open={detailModalVisible}
         onCancel={() => setDetailModalVisible(false)}
         width={800}
         footer={[
           <Button key="close" onClick={() => setDetailModalVisible(false)}>
-            Close
+            Закрыть
           </Button>,
           <Button key="edit" type="primary">
-            Edit Product
+            Редактировать
           </Button>,
         ]}
       >
@@ -194,31 +194,31 @@ const Products: React.FC = () => {
             items={[
               {
                 key: 'overview',
-                label: 'Overview',
+                label: 'Общий обзор',
                 children: (
                   <Space direction="vertical" style={{ width: '100%' }}>
                     <div>
                       <Text strong>SKU:</Text> <Text>{selectedProduct.sku}</Text>
                     </div>
                     <div>
-                      <Text strong>Name:</Text> <Text>{selectedProduct.name}</Text>
+                      <Text strong>Название:</Text> <Text>{selectedProduct.name}</Text>
                     </div>
                     <div>
-                      <Text strong>Category:</Text> <Text>{selectedProduct.category || '—'}</Text>
+                      <Text strong>Категория:</Text> <Text>{selectedProduct.category || '—'}</Text>
                     </div>
                     <div>
-                      <Text strong>Description:</Text> <Text>{selectedProduct.description || '—'}</Text>
+                      <Text strong>Описание:</Text> <Text>{selectedProduct.description || '—'}</Text>
                     </div>
                     <div>
-                      <Text strong>Cost Price:</Text> <Text>₽{selectedProduct.attributes?.cost_price || 0}</Text>
+                      <Text strong>Себестоимость:</Text> <Text>₽{selectedProduct.attributes?.cost_price || 0}</Text>
                     </div>
                     <div>
-                      <Text strong>Selling Price:</Text> <Text>₽{selectedProduct.attributes?.selling_price || 0}</Text>
+                      <Text strong>Цена продажи:</Text> <Text>₽{selectedProduct.attributes?.selling_price || 0}</Text>
                     </div>
                     <div>
-                      <Text strong>Status:</Text>{' '}
+                      <Text strong>Статус:</Text>{' '}
                       <Tag color={selectedProduct.is_active ? 'success' : 'default'}>
-                        {selectedProduct.is_active ? 'Active' : 'Inactive'}
+                        {selectedProduct.is_active ? 'Активен' : 'Неактивен'}
                       </Tag>
                     </div>
                   </Space>
@@ -226,18 +226,18 @@ const Products: React.FC = () => {
               },
               {
                 key: 'sales',
-                label: 'Sales History',
-                children: <div>Sales history chart will be displayed here</div>,
+                label: 'История продаж',
+                children: <div>Здесь будет отображен график продаж</div>,
               },
               {
                 key: 'movement',
-                label: 'Stock Movement',
-                children: <div>Stock movement history will be displayed here</div>,
+                label: 'Движение товара',
+                children: <div>Здесь будет отображена история движения товара</div>,
               },
               {
                 key: 'forecast',
-                label: 'Forecast & Orders',
-                children: <div>Forecast data and purchase orders will be displayed here</div>,
+                label: 'Прогноз и заказы',
+                children: <div>Здесь будут отображены прогнозы и заказы на пополнение</div>,
               },
             ]}
           />

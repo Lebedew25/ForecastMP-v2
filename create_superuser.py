@@ -8,10 +8,7 @@ from accounts.models import User, Company
 
 # Создаем компанию, если её нет
 company, created = Company.objects.get_or_create(
-    name='Demo Company v2',
-    defaults={
-        'description': 'Демонстрационная компания для тестирования системы'
-    }
+    name='Demo Company v2'
 )
 
 if created:

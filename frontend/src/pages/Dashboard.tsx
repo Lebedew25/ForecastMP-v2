@@ -98,7 +98,7 @@ const Dashboard: React.FC = () => {
 
   const urgentProductsColumns = [
     {
-      title: 'Product',
+      title: 'Товар',
       dataIndex: ['product', 'name'],
       key: 'product',
       render: (_: any, record: UrgentProduct) => (
@@ -109,14 +109,14 @@ const Dashboard: React.FC = () => {
       ),
     },
     {
-      title: 'Issue',
+      title: 'Проблема',
       dataIndex: 'issue_type',
       key: 'issue',
       render: (type: string) => {
         const typeMap: Record<string, { icon: React.ReactNode; text: string; color: string }> = {
-          NEGATIVE_STOCK: { icon: <WarningOutlined />, text: 'Overselling', color: '#F5222D' },
-          LOW_STOCK: { icon: <WarningOutlined />, text: 'Low Stock', color: '#FA8C16' },
-          NO_MOVEMENT: { icon: <CheckCircleOutlined />, text: 'No Movement', color: '#8C8C8C' },
+          NEGATIVE_STOCK: { icon: <WarningOutlined />, text: 'Перепродажа', color: '#F5222D' },
+          LOW_STOCK: { icon: <WarningOutlined />, text: 'Низкий остаток', color: '#FA8C16' },
+          NO_MOVEMENT: { icon: <CheckCircleOutlined />, text: 'Нет движения', color: '#8C8C8C' },
         };
         const config = typeMap[type] || typeMap.NO_MOVEMENT;
         return (
@@ -128,13 +128,13 @@ const Dashboard: React.FC = () => {
       },
     },
     {
-      title: 'Current Stock',
+      title: 'Текущий остаток',
       dataIndex: 'current_stock',
       key: 'stock',
       align: 'right' as const,
     },
     {
-      title: 'Forecast',
+      title: 'Прогноз',
       dataIndex: 'days_remaining',
       key: 'forecast',
       render: (days: number) => <StockBadge daysRemaining={days} />,
@@ -151,13 +151,13 @@ const Dashboard: React.FC = () => {
 
   return (
     <div>
-      <Title level={2}>Dashboard</Title>
+      <Title level={2}>Главная панель</Title>
       
       {/* KPI Cards */}
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
         <Col xs={24} sm={12} lg={8}>
           <KPICard
-            title="Total Inventory Value"
+            title="Общая стоимость запасов"
             value={metrics?.total_inventory_value || 0}
             prefix="₽"
             precision={2}
@@ -166,29 +166,29 @@ const Dashboard: React.FC = () => {
         </Col>
         <Col xs={24} sm={12} lg={8}>
           <KPICard
-            title="Average Turnover"
+            title="Средняя оборачиваемость"
             value={metrics?.average_turnover || 0}
-            suffix="days"
+            suffix="дней"
             precision={1}
             trend={{ value: 2.1, isPositive: false }}
           />
         </Col>
         <Col xs={24} sm={12} lg={8}>
           <KPICard
-            title="Low Stock Items"
+            title="Низкий остаток"
             value={metrics?.low_stock_count || 0}
             trend={{ value: 15, isPositive: false }}
           />
         </Col>
         <Col xs={24} sm={12} lg={8}>
           <KPICard
-            title="Dead Stock Items"
+            title="Неликвидные товары"
             value={metrics?.dead_stock_count || 0}
           />
         </Col>
         <Col xs={24} sm={12} lg={8}>
           <KPICard
-            title="Today's Sales"
+            title="Продажи сегодня"
             value={metrics?.today_sales || 0}
             prefix="₽"
             precision={2}
@@ -197,7 +197,7 @@ const Dashboard: React.FC = () => {
         </Col>
         <Col xs={24} sm={12} lg={8}>
           <KPICard
-            title="Weekly Sales"
+            title="Продажи за неделю"
             value={metrics?.weekly_sales || 0}
             prefix="₽"
             precision={2}
@@ -209,7 +209,7 @@ const Dashboard: React.FC = () => {
       {/* Charts */}
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
         <Col xs={24} lg={14}>
-          <Card title="Inventory & Sales Dynamics (Last 5 Days)">
+          <Card title="Динамика запасов и продаж (последние 5 дней)">
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={inventoryTrendData}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -218,14 +218,14 @@ const Dashboard: React.FC = () => {
                 <YAxis yAxisId="right" orientation="right" />
                 <Tooltip />
                 <Legend />
-                <Line yAxisId="left" type="monotone" dataKey="inventory" stroke="#1890FF" name="Inventory Value (₽)" />
-                <Line yAxisId="right" type="monotone" dataKey="sales" stroke="#52C41A" name="Daily Sales (₽)" />
+                <Line yAxisId="left" type="monotone" dataKey="inventory" stroke="#1890FF" name="Стоимость запасов (₽)" />
+                <Line yAxisId="right" type="monotone" dataKey="sales" stroke="#52C41A" name="Ежедневные продажи (₽)" />
               </LineChart>
             </ResponsiveContainer>
           </Card>
         </Col>
         <Col xs={24} lg={10}>
-          <Card title="Top 5 Products by Sales">
+          <Card title="Топ-5 товаров по продажам">
             <ResponsiveContainer width="100%" height={300}>
               <BarChart data={productPerformanceData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" />
@@ -242,7 +242,7 @@ const Dashboard: React.FC = () => {
       {/* Tables */}
       <Row gutter={[16, 16]}>
         <Col xs={24} lg={16}>
-          <Card title="Products Requiring Attention">
+          <Card title="Товары, требующие внимания">
             <Table
               columns={urgentProductsColumns}
               dataSource={urgentProducts}
@@ -253,7 +253,7 @@ const Dashboard: React.FC = () => {
           </Card>
         </Col>
         <Col xs={24} lg={8}>
-          <Card title="Recent Activity">
+          <Card title="Последняя активность">
             <Space direction="vertical" style={{ width: '100%' }}>
               {recentActivities.map(activity => (
                 <div key={activity.id} style={{ padding: '8px 0', borderBottom: '1px solid #f0f0f0' }}>

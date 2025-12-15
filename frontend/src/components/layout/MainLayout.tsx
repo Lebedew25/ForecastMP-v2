@@ -29,27 +29,27 @@ const MainLayout: React.FC = () => {
     {
       key: '/',
       icon: <DashboardOutlined />,
-      label: 'Dashboard',
+      label: 'Главная',
       onClick: () => navigate('/'),
     },
     {
       key: '/products',
       icon: <ShoppingOutlined />,
-      label: 'Products',
+      label: 'Товары',
       children: [
         {
           key: '/products/all',
-          label: 'All Products',
+          label: 'Все товары',
           onClick: () => navigate('/products'),
         },
         {
           key: '/products/categories',
-          label: 'Categories',
+          label: 'Категории',
           onClick: () => navigate('/products/categories'),
         },
         {
           key: '/products/import',
-          label: 'Import/Export',
+          label: 'Импорт/Экспорт',
           onClick: () => navigate('/settings/import'),
         },
       ],
@@ -57,26 +57,26 @@ const MainLayout: React.FC = () => {
     {
       key: '/inventory',
       icon: <DatabaseOutlined />,
-      label: 'Inventory',
+      label: 'Склад',
       children: [
         {
           key: '/inventory/overview',
-          label: 'Overview Table',
+          label: 'Общий обзор',
           onClick: () => navigate('/inventory'),
         },
         {
           key: '/inventory/warehouse',
-          label: 'By Warehouse',
+          label: 'По складам',
           onClick: () => navigate('/inventory/warehouse'),
         },
         {
           key: '/inventory/adjust',
-          label: 'Stock Adjustments',
+          label: 'Корректировка остатков',
           onClick: () => navigate('/inventory/adjust'),
         },
         {
           key: '/inventory/history',
-          label: 'Movement History',
+          label: 'История движений',
           onClick: () => navigate('/inventory/history'),
         },
       ],
@@ -84,21 +84,21 @@ const MainLayout: React.FC = () => {
     {
       key: '/settings',
       icon: <SettingOutlined />,
-      label: 'Settings',
+      label: 'Настройки',
       children: [
         {
           key: '/settings/company',
-          label: 'Company Profile',
+          label: 'Профиль компании',
           onClick: () => navigate('/settings/company'),
         },
         {
           key: '/settings/warehouses',
-          label: 'Warehouses',
+          label: 'Склады',
           onClick: () => navigate('/settings/warehouses'),
         },
         {
           key: '/settings/integrations',
-          label: 'Sales Channels',
+          label: 'Каналы продаж',
           onClick: () => navigate('/settings/integrations'),
         },
       ],
@@ -109,12 +109,12 @@ const MainLayout: React.FC = () => {
     {
       key: 'profile',
       icon: <UserOutlined />,
-      label: 'Profile',
+      label: 'Профиль',
     },
     {
       key: 'logout',
       icon: <LogoutOutlined />,
-      label: 'Logout',
+      label: 'Выйти',
       onClick: () => dispatch(logout()),
     },
   ];

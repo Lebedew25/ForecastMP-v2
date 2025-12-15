@@ -23,8 +23,8 @@ const Inventory: React.FC = () => {
 
   // Mock data
   const mockWarehouses = [
-    { id: 'all', name: 'All Warehouses', warehouse_type: 'OWN' as const, company: '', is_primary: true, is_active: true, created_at: '', metadata: {} },
-    { id: '1', name: 'Main Warehouse', warehouse_type: 'OWN' as const, company: '', is_primary: true, is_active: true, created_at: '', metadata: {} },
+    { id: 'all', name: 'Все склады', warehouse_type: 'OWN' as const, company: '', is_primary: true, is_active: true, created_at: '', metadata: {} },
+    { id: '1', name: 'Основной склад', warehouse_type: 'OWN' as const, company: '', is_primary: true, is_active: true, created_at: '', metadata: {} },
     { id: '2', name: 'Ozon FF', warehouse_type: 'MARKETPLACE_FF' as const, marketplace: 'OZON' as const, company: '', is_primary: false, is_active: true, created_at: '', metadata: {} },
   ];
 
@@ -32,8 +32,8 @@ const Inventory: React.FC = () => {
     {
       id: '1',
       sku: 'SKU-001',
-      name: 'Product A',
-      category: 'Electronics',
+      name: 'Товар A',
+      category: 'Электроника',
       available: 150,
       reserved: 30,
       expected: 100,
@@ -42,8 +42,8 @@ const Inventory: React.FC = () => {
     {
       id: '2',
       sku: 'SKU-002',
-      name: 'Product B',
-      category: 'Clothing',
+      name: 'Товар B',
+      category: 'Одежда',
       available: 45,
       reserved: 15,
       expected: 0,
@@ -53,7 +53,7 @@ const Inventory: React.FC = () => {
 
   const columns: ColumnsType<InventoryItem> = [
     {
-      title: 'Product',
+      title: 'Товар',
       key: 'product',
       width: 250,
       render: (_, record) => (
@@ -64,13 +64,13 @@ const Inventory: React.FC = () => {
       ),
     },
     {
-      title: 'Category',
+      title: 'Категория',
       dataIndex: 'category',
       key: 'category',
       width: 150,
     },
     {
-      title: 'Available',
+      title: 'Доступно',
       dataIndex: 'available',
       key: 'available',
       width: 100,
@@ -78,14 +78,14 @@ const Inventory: React.FC = () => {
       render: (value: number) => <Text strong>{value}</Text>,
     },
     {
-      title: 'Reserved',
+      title: 'Зарезервировано',
       dataIndex: 'reserved',
       key: 'reserved',
       width: 100,
       align: 'right',
     },
     {
-      title: 'Expected',
+      title: 'Ожидается',
       dataIndex: 'expected',
       key: 'expected',
       width: 100,
@@ -93,27 +93,27 @@ const Inventory: React.FC = () => {
       render: (value: number) => value > 0 ? <Text type="success">+{value}</Text> : <Text type="secondary">—</Text>,
     },
     {
-      title: 'Total',
+      title: 'Всего',
       key: 'total',
       width: 100,
       align: 'right',
       render: (_, record) => <Text strong>{record.available + record.reserved}</Text>,
     },
     {
-      title: 'Forecast',
+      title: 'Прогноз',
       dataIndex: 'forecast_days',
       key: 'forecast',
       width: 140,
       render: (days: number) => <StockBadge daysRemaining={days} />,
     },
     {
-      title: 'Actions',
+      title: 'Действия',
       key: 'actions',
       width: 120,
       render: () => (
         <Space>
-          <Button type="link" size="small">Adjust</Button>
-          <Button type="link" size="small">Transfer</Button>
+          <Button type="link" size="small">Корректировать</Button>
+          <Button type="link" size="small">Переместить</Button>
         </Space>
       ),
     },
@@ -122,10 +122,10 @@ const Inventory: React.FC = () => {
   return (
     <div>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <Title level={2} style={{ margin: 0 }}>Inventory Overview</Title>
+        <Title level={2} style={{ margin: 0 }}>Обзор склада</Title>
         <Space>
-          <Button icon={<DownloadOutlined />}>Export</Button>
-          <Button type="primary" icon={<ToolOutlined />}>Stock Adjustment</Button>
+          <Button icon={<DownloadOutlined />}>Экспорт</Button>
+          <Button type="primary" icon={<ToolOutlined />}>Корректировка остатков</Button>
         </Space>
       </div>
 
@@ -133,22 +133,22 @@ const Inventory: React.FC = () => {
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
         <Col xs={24} sm={12} lg={6}>
           <Card>
-            <Statistic title="Total SKUs" value={mockInventory.length} />
+            <Statistic title="Всего товаров" value={mockInventory.length} />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card>
-            <Statistic title="Total Stock" value={mockInventory.reduce((sum, item) => sum + item.available, 0)} />
+            <Statistic title="Общий остаток" value={mockInventory.reduce((sum, item) => sum + item.available, 0)} />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card>
-            <Statistic title="Reserved" value={mockInventory.reduce((sum, item) => sum + item.reserved, 0)} />
+            <Statistic title="Зарезервировано" value={mockInventory.reduce((sum, item) => sum + item.reserved, 0)} />
           </Card>
         </Col>
         <Col xs={24} sm={12} lg={6}>
           <Card>
-            <Statistic title="Expected Inbound" value={mockInventory.reduce((sum, item) => sum + item.expected, 0)} />
+            <Statistic title="Ожидается поставка" value={mockInventory.reduce((sum, item) => sum + item.expected, 0)} />
           </Card>
         </Col>
       </Row>
@@ -171,7 +171,7 @@ const Inventory: React.FC = () => {
         scroll={{ x: 1000 }}
         pagination={{
           showSizeChanger: true,
-          showTotal: (total) => `Total ${total} items`,
+          showTotal: (total) => `Всего ${total} позиций`,
         }}
       />
     </div>

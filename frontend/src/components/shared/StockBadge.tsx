@@ -28,16 +28,17 @@ const StockBadge: React.FC<StockBadgeProps> = ({ daysRemaining, status, size = '
   // Text mapping
   const getLabel = (): string => {
     if (daysRemaining !== undefined) {
-      if (daysRemaining === 0) return 'Out of Stock';
-      if (daysRemaining === 1) return '1 day';
-      return `${daysRemaining} days`;
+      if (daysRemaining === 0) return 'Нет на складе';
+      if (daysRemaining === 1) return '1 день';
+      if (daysRemaining < 5) return `${daysRemaining} дня`;
+      return `${daysRemaining} дней`;
     }
     
     switch (badgeStatus) {
-      case 'ADEQUATE': return '> 30 days';
-      case 'WARNING': return '7-30 days';
-      case 'CRITICAL': return '< 7 days';
-      default: return 'No Data';
+      case 'ADEQUATE': return '> 30 дней';
+      case 'WARNING': return '7-30 дней';
+      case 'CRITICAL': return '< 7 дней';
+      default: return 'Нет данных';
     }
   };
 

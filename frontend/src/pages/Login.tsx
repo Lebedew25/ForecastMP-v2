@@ -47,15 +47,15 @@ const Login: React.FC = () => {
       }}>
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <UserOutlined style={{ fontSize: '48px', color: '#1890FF', marginBottom: '16px' }} />
-          <Title level={2} style={{ marginBottom: '8px' }}>Welcome to ForecastMP</Title>
+          <Title level={2} style={{ marginBottom: '8px' }}>Добро пожаловать в ForecastMP</Title>
           <Paragraph type="secondary">
-            Intelligent Inventory Management Platform
+            Интеллектуальная платформа управления запасами
           </Paragraph>
         </div>
 
         {error && (
           <Alert
-            message="Login Failed"
+            message="Ошибка входа"
             description={error}
             type="error"
             closable
@@ -72,7 +72,7 @@ const Login: React.FC = () => {
         >
           <Form.Item
             name="username"
-            rules={[{ required: true, message: 'Please input your email!' }]}
+            rules={[{ required: true, message: 'Пожалуйста, введите email!' }]}
           >
             <Input
               prefix={<UserOutlined />}
@@ -83,11 +83,11 @@ const Login: React.FC = () => {
 
           <Form.Item
             name="password"
-            rules={[{ required: true, message: 'Please input your password!' }]}
+            rules={[{ required: true, message: 'Пожалуйста, введите пароль!' }]}
           >
             <Input.Password
               prefix={<LockOutlined />}
-              placeholder="Password"
+              placeholder="Пароль"
               autoComplete="current-password"
             />
           </Form.Item>
@@ -106,7 +106,7 @@ const Login: React.FC = () => {
                 borderRadius: '8px'
               }}
             >
-              Sign In
+              Войти
             </Button>
           </Form.Item>
         </Form>
