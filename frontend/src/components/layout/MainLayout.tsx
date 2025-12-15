@@ -120,7 +120,20 @@ const MainLayout: React.FC = () => {
   ];
 
   // Get selected keys from current location
-  const selectedKeys = [location.pathname];
+  const getSelectedKeys = () => {
+    const path = location.pathname;
+    
+    // For nested routes, find the matching parent
+    if (path.startsWith('/inventory')) return ['/inventory/overview'];
+    if (path.startsWith('/products/categories')) return ['/products/categories'];
+    if (path.startsWith('/products/import') || path.startsWith('/settings/import')) return ['/products/import'];
+    if (path === '/products') return ['/products/all'];
+    if (path.startsWith('/settings')) return ['/settings/company'];
+    
+    return [path];
+  };
+
+  const selectedKeys = getSelectedKeys();
 
   return (
     <Layout style={{ minHeight: '100vh' }}>

@@ -19,8 +19,10 @@ import MainLayout from './components/layout/MainLayout';
 // Pages
 import Dashboard from './pages/Dashboard';
 import Products from './pages/Products';
-import Inventory from './pages/Inventory';
-import Settings from './pages/Settings';
+import Categories from './pages/Categories';
+import ImportExport from './pages/ImportExport';
+import Inventory from './pages/InventoryNew';
+import Settings from './pages/SettingsNew';
 import Onboarding from './pages/Onboarding';
 import NoCompany from './pages/NoCompany';
 import Login from './pages/Login';
@@ -85,7 +87,9 @@ function AppRoutes() {
       <Route element={hasCompany ? <MainLayout /> : <Navigate to="/no-company" replace />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/products" element={<Products />} />
-        <Route path="/inventory" element={<Inventory />} />
+        <Route path="/products/categories" element={<Categories />} />
+        <Route path="/products/import" element={<ImportExport />} />
+        <Route path="/inventory/*" element={<Inventory />} />
         <Route path="/settings/*" element={<Settings />} />
       </Route>
 

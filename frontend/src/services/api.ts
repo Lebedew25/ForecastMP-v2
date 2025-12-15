@@ -95,7 +95,30 @@ class ApiService {
 
   // Products
   async getProducts(params?: any): Promise<PaginatedResponse<Product>> {
-    const response = await this.client.get<PaginatedResponse<Product>>('/products/', { params });
+    const response = await this.client.get('/products/', { params });
+    const data = response.data;
+    
+    // Handle both Django response format and standard paginated format
+    if (data.success && data.products) {
+      return {
+        count: data.total_count || 0,
+        next: null,
+        previous: null,
+        results: data.products.map((p: any) => ({
+          id: p.id,
+          sku: p.sku,
+          name: p.name,
+          description: p.description,
+          category: p.category,
+          is_active: true,
+          attributes: {
+            cost_price: p.cost,
+            selling_price: p.price,
+          },
+        })),
+      };
+    }
+    
     return response.data;
   }
 
