@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Подписка и оплата" %}{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto px-6 py-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-8">{% trans "Подписка и оплата" %}</h1>
+
+    <!-- Current Plan -->
+    <div class="bg-white rounded-lg shadow-soft p-8 mb-6">
+        <div class="flex items-start justify-between mb-6">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900 mb-2">
+                    {% trans "Тариф" %}: {{ subscription.get_plan_display }}
+                </h2>
+                <p class="text-gray-600">
+                    {% if subscription.status == 'ACTIVE' %}
+                        {% if subscription.trial_end and subscription.trial_end > today %}
+                            {% blocktrans with days=days_until_trial_end %}
+                            Пробный период — осталось {{ days }} дней
+                            {% endblocktrans %}
+                        {% else %}
+                            {% blocktrans with date=subscription.current_period_end|date:"d.m.Y" %}
+                            Активна до {{ date }}
+                            {% endblocktrans %}
+                        {% endif %}
+                    {% elif subscription.status == 'TRIALING' %}
+                        {% blocktrans with date=subscription.trial_end|date:"d.m.Y" %}
+                        Пробный период до {{ date }}
+                        {% endblocktrans %}
+                    {% elif subscription.status == 'PAST_DUE' %}
+                        <span class="text-danger font-semibold">{% trans "Требуется оплата" %}</span>
+                    {% elif subscription.status == 'CANCELLED' %}
+                        <span class="text-gray-500">{% trans "Отменена" %}</span>
+                    {% endif %}
+                </p>
+            </div>
+            <a 
+                href="{% url 'pricing' %}"
+                class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors shadow-soft">
+                {% trans "Изменить тариф" %}
+            </a>
+        </div>
+
+        <!-- Usage Stats -->
+        <div class="grid grid-cols-3 gap-6">
+            <div class="border-t border-gray-200 pt-6">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-medium text-gray-700">{% trans "Количество SKU" %}</span>
+                    <span class="text-xs text-gray-500">
+                        {% if plan_limits.max_skus %}
+                            {{ usage.sku_count }} / {{ plan_limits.max_skus }}
+                        {% else %}
+                            {{ usage.sku_count }} / ∞
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    {% if plan_limits.max_skus %}
+                        {% widthratio usage.sku_count plan_limits.max_skus 100 as sku_percent %}
+                        <div class="bg-primary h-2 rounded-full" style="width: {{ sku_percent }}%"></div>
+                    {% else %}
+                        <div class="bg-success h-2 rounded-full" style="width: 30%"></div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="border-t border-gray-200 pt-6">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-medium text-gray-700">{% trans "Интеграции" %}</span>
+                    <span class="text-xs text-gray-500">
+                        {% if plan_limits.max_integrations %}
+                            {{ usage.integration_count }} / {{ plan_limits.max_integrations }}
+                        {% else %}
+                            {{ usage.integration_count }} / ∞
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    {% if plan_limits.max_integrations %}
+                        {% widthratio usage.integration_count plan_limits.max_integrations 100 as integration_percent %}
+                        <div class="bg-primary h-2 rounded-full" style="width: {{ integration_percent }}%"></div>
+                    {% else %}
+                        <div class="bg-success h-2 rounded-full" style="width: 30%"></div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="border-t border-gray-200 pt-6">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm font-medium text-gray-700">{% trans "Склады" %}</span>
+                    <span class="text-xs text-gray-500">
+                        {% if plan_limits.max_warehouses %}
+                            {{ usage.warehouse_count }} / {{ plan_limits.max_warehouses }}
+                        {% else %}
+                            {{ usage.warehouse_count }} / ∞
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    {% if plan_limits.max_warehouses %}
+                        {% widthratio usage.warehouse_count plan_limits.max_warehouses 100 as warehouse_percent %}
+                        <div class="bg-primary h-2 rounded-full" style="width: {{ warehouse_percent }}%"></div>
+                    {% else %}
+                        <div class="bg-success h-2 rounded-full" style="width: 30%"></div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Plan Features -->
+    <div class="bg-white rounded-lg shadow-soft p-8 mb-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-6">{% trans "Возможности тарифа" %}</h3>
+        <div class="grid grid-cols-2 gap-4">
+            <div class="flex items-center space-x-3">
+                {% if plan_limits.ai_forecasting %}
+                <svg class="w-5 h-5 text-success" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                {% else %}
+                <svg class="w-5 h-5 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                </svg>
+                {% endif %}
+                <span class="text-sm {% if plan_limits.ai_forecasting %}text-gray-900{% else %}text-gray-400{% endif %}">
+                    {% trans "AI прогнозирование" %}
+                </span>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                {% if plan_limits.telegram_notifications %}
+                <svg class="w-5 h-5 text-success" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                {% else %}
+                <svg class="w-5 h-5 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                </svg>
+                {% endif %}
+                <span class="text-sm {% if plan_limits.telegram_notifications %}text-gray-900{% else %}text-gray-400{% endif %}">
+                    {% trans "Telegram уведомления" %}
+                </span>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                {% if plan_limits.api_access %}
+                <svg class="w-5 h-5 text-success" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                {% else %}
+                <svg class="w-5 h-5 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                </svg>
+                {% endif %}
+                <span class="text-sm {% if plan_limits.api_access %}text-gray-900{% else %}text-gray-400{% endif %}">
+                    {% trans "API доступ" %}
+                </span>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                {% if plan_limits.white_label %}
+                <svg class="w-5 h-5 text-success" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                {% else %}
+                <svg class="w-5 h-5 text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                </svg>
+                {% endif %}
+                <span class="text-sm {% if plan_limits.white_label %}text-gray-900{% else %}text-gray-400{% endif %}">
+                    {% trans "White-label брендинг" %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Invoices -->
+    <div class="bg-white rounded-lg shadow-soft p-8">
+        <h3 class="text-lg font-semibold text-gray-900 mb-6">{% trans "История платежей" %}</h3>
+        <div class="overflow-x-auto">
+            <table class="min-w-full">
+                <thead>
+                    <tr class="border-b border-gray-200">
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{% trans "Дата" %}</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{% trans "Описание" %}</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{% trans "Сумма" %}</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{% trans "Статус" %}</th>
+                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">{% trans "Действия" %}</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for invoice in invoices %}
+                    <tr>
+                        <td class="px-4 py-3 text-sm text-gray-900">{{ invoice.invoice_date|date:"d.m.Y" }}</td>
+                        <td class="px-4 py-3 text-sm text-gray-900">{{ invoice.description }}</td>
+                        <td class="px-4 py-3 text-sm font-semibold text-gray-900">{{ invoice.amount }} ₽</td>
+                        <td class="px-4 py-3">
+                            {% if invoice.status == 'PAID' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success bg-opacity-10 text-success">
+                                {% trans "Оплачен" %}
+                            </span>
+                            {% elif invoice.status == 'PENDING' %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning bg-opacity-10 text-warning">
+                                {% trans "Ожидается" %}
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-danger bg-opacity-10 text-danger">
+                                {% trans "Не оплачен" %}
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-3 text-right text-sm">
+                            <a href="#" class="text-primary hover:text-primary-dark">{% trans "Скачать" %}</a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-4 py-8 text-center text-gray-500">
+                            {% trans "Платежей пока нет" %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

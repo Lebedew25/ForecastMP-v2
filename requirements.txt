@@ -7,6 +7,8 @@ python-decouple==3.8
 djangorestframework==3.14.0
 django-cors-headers==4.3.1
 django-filter==23.5
+django-allauth==0.57.0
+django-cotton==0.9.11
 
 # Task Queue
 celery==5.3.4
@@ -25,6 +27,10 @@ requests==2.31.0
 openpyxl==3.1.2
 reportlab==4.0.7
 telebot==0.0.5
+
+# Frontend Enhancement
+# Note: HTMX, Alpine.js, and Tailwind CSS will be loaded via CDN
+# No Python package needed - they are frontend-only libraries
 
 # Development
 pytest==7.4.3

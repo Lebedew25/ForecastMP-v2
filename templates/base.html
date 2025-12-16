@@ -1,0 +1,110 @@
+{% load static %}
+{% load i18n %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>{% block title %}ForecastMP{% endblock %} - {% trans "Управление запасами" %}</title>
+    
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#1890FF',
+                        'primary-dark': '#096DD9',
+                        'primary-darker': '#0050B3',
+                        success: '#52C41A',
+                        danger: '#F5222D',
+                        warning: '#FA8C16',
+                        neutral: '#BFBFBF',
+                        'gray-bg': '#F5F5F5',
+                    },
+                    boxShadow: {
+                        'soft': '0 2px 8px rgba(0, 0, 0, 0.08)',
+                        'soft-lg': '0 4px 16px rgba(0, 0, 0, 0.12)',
+                        'soft-xl': '0 8px 32px rgba(0, 0, 0, 0.16)',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
+    
+    <!-- Google Fonts - Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Custom CSS -->
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-bg min-h-screen">
+    {% block body %}
+    <!-- Main content area -->
+    <div class="flex h-screen overflow-hidden">
+        {% if user.is_authenticated %}
+            {% include "components/sidebar.html" %}
+        {% endif %}
+        
+        <!-- Main content -->
+        <div class="flex-1 overflow-auto">
+            {% if user.is_authenticated %}
+                {% include "components/topbar.html" %}
+            {% endif %}
+            
+            <!-- Page content -->
+            <main class="p-6">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+    
+    <!-- Toast notifications container -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2">
+        <!-- Toasts will be inserted here via HTMX -->
+    </div>
+    
+    <!-- Modal container -->
+    <div id="modal-container">
+        <!-- Modals will be inserted here via HTMX -->
+    </div>
+    {% endblock %}
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

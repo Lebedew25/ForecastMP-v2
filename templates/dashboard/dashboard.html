@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Дашборд" %}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">{% trans "Дашборд" %}</h1>
+            <p class="text-sm text-gray-500 mt-1">{% trans "Обзор текущей ситуации с запасами" %}</p>
+        </div>
+        <div class="flex items-center space-x-3">
+            <button class="bg-white border border-gray-300 hover:border-primary text-gray-700 font-medium py-2 px-4 rounded-lg transition-all duration-200">
+                {% trans "Экспорт" %}
+            </button>
+            <button class="bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-lg shadow-sm hover:shadow-md transition-all duration-200">
+                {% trans "Обновить данные" %}
+            </button>
+        </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Net Sales Card -->
+        <div class="bg-white rounded-lg shadow-soft p-6 hover:shadow-soft-lg transition-shadow duration-300">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                </div>
+                <span class="text-xs font-medium text-success bg-success bg-opacity-10 px-2 py-1 rounded">+12.5%</span>
+            </div>
+            <h3 class="text-sm font-medium text-gray-500 mb-1">{% trans "Чистые продажи" %}</h3>
+            <p class="text-2xl font-bold text-gray-900">1 245 890 ₽</p>
+            <p class="text-xs text-gray-500 mt-2">{% trans "За последние 30 дней" %}</p>
+        </div>
+
+        <!-- Stock Out % Card -->
+        <div class="bg-white rounded-lg shadow-soft p-6 hover:shadow-soft-lg transition-shadow duration-300">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                </div>
+                <span class="text-xs font-medium text-danger bg-danger bg-opacity-10 px-2 py-1 rounded">{% trans "Критично" %}</span>
+            </div>
+            <h3 class="text-sm font-medium text-gray-500 mb-1">{% trans "Риск стокаута" %}</h3>
+            <p class="text-2xl font-bold text-gray-900">8.3%</p>
+            <p class="text-xs text-gray-500 mt-2">12 {% trans "товаров требуют внимания" %}</p>
+        </div>
+
+        <!-- Days Left Card -->
+        <div class="bg-white rounded-lg shadow-soft p-6 hover:shadow-soft-lg transition-shadow duration-300">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                </div>
+                <span class="text-xs font-medium text-success bg-success bg-opacity-10 px-2 py-1 rounded">{% trans "Норма" %}</span>
+            </div>
+            <h3 class="text-sm font-medium text-gray-500 mb-1">{% trans "Средний запас" %}</h3>
+            <p class="text-2xl font-bold text-gray-900">45 {% trans "дней" %}</p>
+            <p class="text-xs text-gray-500 mt-2">{% trans "До следующего заказа" %}</p>
+        </div>
+
+        <!-- Inventory Value Card -->
+        <div class="bg-white rounded-lg shadow-soft p-6 hover:shadow-soft-lg transition-shadow duration-300">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                        </svg>
+                    </div>
+                </div>
+                <span class="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">+3.2%</span>
+            </div>
+            <h3 class="text-sm font-medium text-gray-500 mb-1">{% trans "Стоимость запасов" %}</h3>
+            <p class="text-2xl font-bold text-gray-900">3 890 450 ₽</p>
+            <p class="text-xs text-gray-500 mt-2">{% trans "Текущая стоимость" %}</p>
+        </div>
+    </div>
+
+    <!-- Charts and Tables Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Stock Status Distribution -->
+        <div class="bg-white rounded-lg shadow-soft p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-6">{% trans "Распределение статусов" %}</h3>
+            <div class="space-y-4">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-gray-700">{% trans "Норма" %}</span>
+                        <span class="text-sm font-semibold text-success">78.5%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-success h-2 rounded-full" style="width: 78.5%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-gray-700">{% trans "Требует внимания" %}</span>
+                        <span class="text-sm font-semibold text-warning">13.2%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-warning h-2 rounded-full" style="width: 13.2%"></div>
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-medium text-gray-700">{% trans "Критично" %}</span>
+                        <span class="text-sm font-semibold text-danger">8.3%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-danger h-2 rounded-full" style="width: 8.3%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Urgent Products -->
+        <div class="bg-white rounded-lg shadow-soft p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-semibold text-gray-900">{% trans "Срочные товары" %}</h3>
+                <a href="#" class="text-sm text-primary hover:text-primary-dark">{% trans "Все товары" %} →</a>
+            </div>
+            <div class="space-y-3">
+                <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg border-l-4 border-danger">
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900">SKU-12345</p>
+                        <p class="text-xs text-gray-500">{% trans "Футболка базовая" %}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm font-semibold text-danger">2 {% trans "дня" %}</p>
+                        <p class="text-xs text-gray-500">{% trans "до стокаута" %}</p>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-orange-50 rounded-lg border-l-4 border-warning">
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900">SKU-67890</p>
+                        <p class="text-xs text-gray-500">{% trans "Джинсы классические" %}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm font-semibold text-warning">5 {% trans "дней" %}</p>
+                        <p class="text-xs text-gray-500">{% trans "до стокаута" %}</p>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between p-3 bg-orange-50 rounded-lg border-l-4 border-warning">
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900">SKU-11223</p>
+                        <p class="text-xs text-gray-500">{% trans "Кроссовки спортивные" %}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm font-semibold text-warning">7 {% trans "дней" %}</p>
+                        <p class="text-xs text-gray-500">{% trans "до стокаута" %}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="bg-white rounded-lg shadow-soft p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">{% trans "Быстрые действия" %}</h3>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <a href="#" class="flex items-center p-4 border-2 border-gray-200 hover:border-primary rounded-lg transition-colors group">
+                <div class="w-10 h-10 bg-primary bg-opacity-10 rounded-lg flex items-center justify-center group-hover:bg-opacity-20 transition-colors">
+                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-900">{% trans "Таблица закупок" %}</p>
+                </div>
+            </a>
+            <a href="#" class="flex items-center p-4 border-2 border-gray-200 hover:border-primary rounded-lg transition-colors group">
+                <div class="w-10 h-10 bg-primary bg-opacity-10 rounded-lg flex items-center justify-center group-hover:bg-opacity-20 transition-colors">
+                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-900">{% trans "Создать заказ" %}</p>
+                </div>
+            </a>
+            <a href="#" class="flex items-center p-4 border-2 border-gray-200 hover:border-primary rounded-lg transition-colors group">
+                <div class="w-10 h-10 bg-primary bg-opacity-10 rounded-lg flex items-center justify-center group-hover:bg-opacity-20 transition-colors">
+                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-900">{% trans "Прогноз спроса" %}</p>
+                </div>
+            </a>
+            <a href="#" class="flex items-center p-4 border-2 border-gray-200 hover:border-primary rounded-lg transition-colors group">
+                <div class="w-10 h-10 bg-primary bg-opacity-10 rounded-lg flex items-center justify-center group-hover:bg-opacity-20 transition-colors">
+                    <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm font-medium text-gray-900">{% trans "Экспорт отчета" %}</p>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

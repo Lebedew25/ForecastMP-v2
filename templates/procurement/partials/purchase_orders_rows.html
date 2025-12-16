@@ -1,0 +1,70 @@
+{% load i18n %}
+
+{% for po in purchase_orders %}
+<tr class="hover:bg-gray-50 transition-colors">
+    <td class="px-6 py-4 whitespace-nowrap">
+        <a href="{% url 'procurement:purchase_order_detail' po.id %}" class="text-sm font-medium text-primary hover:text-primary-dark">
+            {{ po.po_number }}
+        </a>
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap">
+        <span class="text-sm text-gray-900">{{ po.order_date|date:"d.m.Y" }}</span>
+    </td>
+    <td class="px-6 py-4">
+        <span class="text-sm text-gray-900">{{ po.supplier_name|default:"—" }}</span>
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap">
+        <span class="text-sm text-gray-900">{{ po.items.count }}</span>
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap">
+        {% if po.status == 'DRAFT' %}
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800">
+            {% trans "Черновик" %}
+        </span>
+        {% elif po.status == 'SUBMITTED' %}
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-primary">
+            {% trans "Отправлено" %}
+        </span>
+        {% elif po.status == 'CONFIRMED' %}
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-success">
+            {% trans "Подтверждено" %}
+        </span>
+        {% elif po.status == 'IN_TRANSIT' %}
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-warning">
+            {% trans "В пути" %}
+        </span>
+        {% elif po.status == 'DELIVERED' %}
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-success">
+            {% trans "Доставлено" %}
+        </span>
+        {% elif po.status == 'CANCELLED' %}
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-danger">
+            {% trans "Отменено" %}
+        </span>
+        {% endif %}
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap">
+        {% if po.expected_delivery %}
+        <span class="text-sm text-gray-900">{{ po.expected_delivery|date:"d.m.Y" }}</span>
+        {% else %}
+        <span class="text-sm text-gray-400">—</span>
+        {% endif %}
+    </td>
+    <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+        <a href="{% url 'procurement:purchase_order_detail' po.id %}" class="text-primary hover:text-primary-dark transition-colors">
+            {% trans "Подробнее" %} →
+        </a>
+    </td>
+</tr>
+{% empty %}
+<tr>
+    <td colspan="7" class="px-6 py-12 text-center">
+        <div class="flex flex-col items-center justify-center space-y-3">
+            <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <p class="text-gray-500 text-lg">{% trans "Заказы не найдены" %}</p>
+        </div>
+    </td>
+</tr>
+{% endfor %}

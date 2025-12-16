@@ -1,0 +1,85 @@
+{% extends "base_public.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Вход в систему" %}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full">
+        <!-- Login Card -->
+        <div class="bg-white rounded-lg shadow-soft-lg p-8">
+            <!-- Logo/Header -->
+            <div class="text-center mb-8">
+                <h2 class="text-3xl font-bold text-gray-900">
+                    {% trans "Вход в аккаунт" %}
+                </h2>
+                <p class="mt-2 text-sm text-gray-600">
+                    {% trans "Добро пожаловать в ForecastMP" %}
+                </p>
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+            <div class="mb-4">
+                {% for message in messages %}
+                <div class="bg-{% if message.tags == 'error' %}red{% else %}green{% endif %}-50 border-l-4 border-{% if message.tags == 'error' %}danger{% else %}success{% endif %} p-4 rounded">
+                    <p class="text-sm {% if message.tags == 'error' %}text-danger{% else %}text-success{% endif %}">{{ message }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Login Form -->
+            <form method="post" action="{% url 'accounts:login' %}" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Username/Email Field -->
+                <div>
+                    <label for="id_username" class="block text-sm font-medium text-gray-700 mb-2">
+                        {% trans "Email адрес или имя пользователя" %}
+                    </label>
+                    <input 
+                        type="text" 
+                        name="username" 
+                        id="id_username"
+                        required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                        placeholder="{% trans 'your@email.com' %}"
+                    >
+                </div>
+
+                <!-- Password Field -->
+                <div>
+                    <label for="id_password" class="block text-sm font-medium text-gray-700 mb-2">
+                        {% trans "Пароль" %}
+                    </label>
+                    <input 
+                        type="password" 
+                        name="password" 
+                        id="id_password"
+                        required
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary transition-colors"
+                        placeholder="{% trans '••••••••' %}"
+                    >
+                </div>
+
+                <!-- Submit Button -->
+                <button 
+                    type="submit"
+                    class="w-full bg-primary hover:bg-primary-dark text-white font-medium py-3 px-6 rounded-lg shadow-sm hover:shadow-md transition-all duration-200"
+                >
+                    {% trans "Войти" %}
+                </button>
+
+                <!-- Sign up link -->
+                <p class="text-center text-sm text-gray-600 mt-6">
+                    {% trans "Нет аккаунта?" %}
+                    <a href="#" class="font-medium text-primary hover:text-primary-dark">
+                        {% trans "Зарегистрироваться" %}
+                    </a>
+                </p>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Таблица закупок" %}{% endblock %}
+
+{% block content %}
+<div class="max-w-screen-2xl mx-auto px-6 py-8">
+    <!-- Page Header -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">{% trans "Таблица закупок" %}</h1>
+                <p class="text-gray-600">{% trans "Планирование закупок и создание заказов на основе прогнозов" %}</p>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button 
+                    id="exportBtn"
+                    class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                    </svg>
+                    <span>{% trans "Экспорт" %}</span>
+                </button>
+                <button 
+                    id="createOrderBtn"
+                    class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors shadow-soft flex items-center space-x-2"
+                    disabled>
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    <span>{% trans "Создать заказ" %}</span>
+                    <span id="selectedCount" class="ml-2 px-2 py-0.5 bg-white bg-opacity-20 rounded-full text-sm">0</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters & Summary -->
+    <div class="bg-white rounded-lg shadow-soft p-6 mb-6">
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-4 gap-6 mb-6">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">{% trans "Норма" %}</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ summary.normal_count }}</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">{% trans "Внимание" %}</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ summary.attention_count }}</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">{% trans "Заказать сегодня" %}</p>
+                    <p class="text-2xl font-bold text-danger">{{ summary.order_today_count }}</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-500">{% trans "Уже заказано" %}</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ summary.already_ordered_count }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="border-t border-gray-200 pt-6">
+            <form 
+                id="filterForm"
+                hx-get="{% url 'procurement:buying_table' %}"
+                hx-target="#buyingTableBody"
+                hx-trigger="change"
+                hx-indicator="#loadingIndicator"
+                class="grid grid-cols-5 gap-4">
+                
+                <!-- Category Filter -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{% trans "Категория" %}</label>
+                    <select name="category" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <option value="">{% trans "Все категории" %}</option>
+                        {% for category in categories %}
+                        <option value="{{ category }}" {% if request.GET.category == category %}selected{% endif %}>{{ category }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Supplier Filter -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{% trans "Поставщик" %}</label>
+                    <select name="supplier" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <option value="">{% trans "Все поставщики" %}</option>
+                        {% for supplier in suppliers %}
+                        <option value="{{ supplier }}" {% if request.GET.supplier == supplier %}selected{% endif %}>{{ supplier }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Health Status Filter -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{% trans "Статус здоровья" %}</label>
+                    <select name="health_status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <option value="">{% trans "Все статусы" %}</option>
+                        <option value="ORDER_TODAY" {% if request.GET.health_status == 'ORDER_TODAY' %}selected{% endif %}>{% trans "Заказать сегодня" %}</option>
+                        <option value="ATTENTION_REQUIRED" {% if request.GET.health_status == 'ATTENTION_REQUIRED' %}selected{% endif %}>{% trans "Внимание" %}</option>
+                        <option value="ALREADY_ORDERED" {% if request.GET.health_status == 'ALREADY_ORDERED' %}selected{% endif %}>{% trans "Уже заказано" %}</option>
+                        <option value="NORMAL" {% if request.GET.health_status == 'NORMAL' %}selected{% endif %}>{% trans "Норма" %}</option>
+                    </select>
+                </div>
+
+                <!-- Search -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">{% trans "Поиск" %}</label>
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            name="search" 
+                            value="{{ request.GET.search }}"
+                            placeholder="{% trans 'SKU, название...' %}"
+                            class="w-full px-3 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <svg class="w-5 h-5 text-gray-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Reset Button -->
+                <div class="flex items-end">
+                    <button 
+                        type="button"
+                        onclick="document.getElementById('filterForm').reset(); htmx.trigger('#filterForm', 'change');"
+                        class="w-full px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors">
+                        {% trans "Сбросить" %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Buying Table -->
+    <div class="bg-white rounded-lg shadow-soft overflow-hidden">
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="htmx-indicator absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
+            <div class="flex items-center space-x-3">
+                <svg class="animate-spin h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span class="text-gray-700">{% trans "Загрузка..." %}</span>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-4 text-left">
+                            <input 
+                                type="checkbox" 
+                                id="selectAll"
+                                class="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary">
+                        </th>
+                        <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            {% trans "Товар / SKU" %}
+                        </th>
+                        <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            {% trans "Текущий остаток" %}
+                        </th>
+                        <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            {% trans "Дней до стокаута" %}
+                        </th>
+                        <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            {% trans "Прогноз (30д)" %}
+                        </th>
+                        <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            {% trans "Статус" %}
+                        </th>
+                        <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            {% trans "Рекомендация" %}
+                        </th>
+                        <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            {% trans "К заказу" %}
+                        </th>
+                        <th scope="col" class="px-6 py-4 text-right text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            {% trans "Действия" %}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody id="buyingTableBody" class="bg-white divide-y divide-gray-200">
+                    {% include 'procurement/partials/buying_table_rows.html' %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if recommendations.has_other_pages %}
+        <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+            <div class="flex items-center justify-between">
+                <div class="text-sm text-gray-700">
+                    {% blocktrans with start=recommendations.start_index end=recommendations.end_index total=recommendations.paginator.count %}
+                    Показано {{ start }}–{{ end }} из {{ total }} товаров
+                    {% endblocktrans %}
+                </div>
+                <div class="flex space-x-2">
+                    {% if recommendations.has_previous %}
+                    <a href="?page={{ recommendations.previous_page_number }}" 
+                       class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                        {% trans "Назад" %}
+                    </a>
+                    {% endif %}
+                    {% if recommendations.has_next %}
+                    <a href="?page={{ recommendations.next_page_number }}"
+                       class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                        {% trans "Вперед" %}
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Create Order Modal -->
+<div 
+    id="createOrderModal" 
+    class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center"
+    x-data="{ show: false }"
+    x-show="show"
+    x-cloak>
+    <div class="bg-white rounded-lg shadow-soft-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <h2 class="text-xl font-bold text-gray-900">{% trans "Создание заказа на закупку" %}</h2>
+                <button @click="show = false" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div id="orderModalContent" class="px-6 py-4">
+            <!-- Content will be loaded via HTMX -->
+        </div>
+    </div>
+</div>
+
+<script>
+    // Select all functionality
+    document.getElementById('selectAll').addEventListener('change', function(e) {
+        const checkboxes = document.querySelectorAll('.product-checkbox');
+        checkboxes.forEach(cb => cb.checked = e.target.checked);
+        updateSelectedCount();
+    });
+
+    // Update selected count
+    function updateSelectedCount() {
+        const checkboxes = document.querySelectorAll('.product-checkbox:checked');
+        const count = checkboxes.length;
+        document.getElementById('selectedCount').textContent = count;
+        document.getElementById('createOrderBtn').disabled = count === 0;
+    }
+
+    // Create order button
+    document.getElementById('createOrderBtn').addEventListener('click', function() {
+        const selectedIds = Array.from(document.querySelectorAll('.product-checkbox:checked'))
+            .map(cb => cb.value);
+        
+        if (selectedIds.length > 0) {
+            // Load order creation form via HTMX
+            htmx.ajax('POST', '{% url "procurement:create_order" %}', {
+                target: '#orderModalContent',
+                swap: 'innerHTML',
+                values: { product_ids: selectedIds }
+            }).then(() => {
+                Alpine.store('createOrderModal', { show: true });
+            });
+        }
+    });
+
+    // Export functionality
+    document.getElementById('exportBtn').addEventListener('click', function() {
+        const params = new URLSearchParams(window.location.search);
+        window.location.href = '{% url "procurement:export_buying_table" %}?' + params.toString();
+    });
+</script>
+{% endblock %}

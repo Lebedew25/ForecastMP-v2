@@ -5,10 +5,17 @@ from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.views import View
+from django.shortcuts import render
 import logging
 from .services import DashboardMetricsService
 
 logger = logging.getLogger(__name__)
+
+
+@login_required
+def dashboard_view(request):
+    """Main dashboard HTML view"""
+    return render(request, 'dashboard/dashboard.html')
 
 
 @method_decorator(login_required, name='dispatch')

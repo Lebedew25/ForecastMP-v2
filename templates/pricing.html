@@ -1,0 +1,301 @@
+{% extends "base_public.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Тарифы" %}{% endblock %}
+
+{% block content %}
+<div class="bg-gray-bg py-12 sm:py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">
+                {% trans "Выберите свой план" %}
+            </h1>
+            <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+                {% trans "Гибкие тарифы для любого размера бизнеса" %}
+            </p>
+            
+            <!-- Billing Toggle -->
+            <div class="mt-8 flex items-center justify-center" x-data="{ annual: false }">
+                <span class="text-sm font-medium text-gray-700">{% trans "Ежемесячно" %}</span>
+                <button @click="annual = !annual" type="button" class="mx-3 relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2" :class="annual ? 'bg-primary' : 'bg-gray-200'">
+                    <span class="translate-x-0 inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out" :class="annual ? 'translate-x-5' : 'translate-x-0'"></span>
+                </button>
+                <span class="text-sm font-medium text-gray-700">
+                    {% trans "Ежегодно" %}
+                    <span class="text-success ml-1">({% trans "скидка 20%" %})</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Pricing Cards Grid -->
+        <div class="grid grid-cols-1 gap-8 lg:grid-cols-4 lg:gap-6">
+            
+            <!-- Start Plan -->
+            <div class="bg-white rounded-lg shadow-soft p-8 border border-gray-200">
+                <div class="mb-8">
+                    <h3 class="text-2xl font-bold text-gray-900">Start</h3>
+                    <p class="mt-2 text-sm text-gray-500">{% trans "Для малого бизнеса" %}</p>
+                    <p class="mt-6">
+                        <span class="text-4xl font-bold text-gray-900">{% trans "Бесплатно" %}</span>
+                    </p>
+                </div>
+                
+                <ul class="space-y-4 mb-8">
+                    <li class="flex items-start">
+                        <svg class="h-5 w-5 text-success mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-sm text-gray-700">{% trans "До 100 SKU" %}</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="h-5 w-5 text-success mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-sm text-gray-700">{% trans "1 маркетплейс" %}</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="h-5 w-5 text-success mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-sm text-gray-700">{% trans "Базовый прогноз" %}</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="h-5 w-5 text-success mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-sm text-gray-700">{% trans "Еженедельные отчёты" %}</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="h-5 w-5 text-success mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-sm text-gray-700">{% trans "Email поддержка" %}</span>
+                    </li>
+                </ul>
+                
+                <a href="{% url 'account_signup' %}" class="block w-full bg-white border-2 border-gray-300 hover:border-primary text-gray-700 font-medium py-3 px-6 rounded-lg text-center transition-all duration-200">
+                    {% trans "Начать бесплатно" %}
+                </a>
+            </div>
+
+            <!-- Mini Plan -->
+            <div class="bg-white rounded-lg shadow-soft p-8 border-2 border-blue-200">
+                <div class="mb-8">
+                    <h3 class="text-2xl font-bold text-gray-900">Mini</h3>
+                    <p class="mt-2 text-sm text-gray-500">{% trans "Растущий бизнес" %}</p>
+                    <p class="mt-6" x-data="{ annual: false }">
+                        <span class="text-4xl font-bold text-gray-900" x-show="!annual">4 990 ₽</span>
+                        <span class="text-4xl font-bold text-gray-900" x-show="annual">3 990 ₽</span>
+                        <span class="text-sm text-gray-500">{% trans "/месяц" %}</span>
+                    </p>
+                </div>
+                
+                <ul class="space-y-4 mb-8">
+                    <li class="flex items-start">
+                        <svg class="h-5 w-5 text-success mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-sm text-gray-700">{% trans "До 500 SKU" %}</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="h-5 w-5 text-success mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-sm text-gray-700">{% trans "До 2 маркетплейсов" %}</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="h-5 w-5 text-success mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-sm text-gray-700">{% trans "AI-прогноз" %}</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="h-5 w-5 text-success mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-sm text-gray-700">{% trans "До 3 складов" %}</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="h-5 w-5 text-success mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-sm text-gray-700">{% trans "Ежедневные отчёты" %}</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="h-5 w-5 text-success mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-sm text-gray-700">{% trans "Приоритетная поддержка" %}</span>
+                    </li>
+                </ul>
+                
+                <a href="{% url 'account_signup' %}?plan=mini" class="block w-full bg-primary hover:bg-primary-dark text-white font-medium py-3 px-6 rounded-lg text-center shadow-sm hover:shadow-md transition-all duration-200">
+                    {% trans "Выбрать Mini" %}
+                </a>
+            </div>
+
+            <!-- Pro Plan (Most Popular) -->
+            <div class="bg-primary rounded-lg shadow-soft-lg p-8 relative transform lg:scale-105">
+                <div class="absolute top-0 right-6 transform -translate-y-1/2">
+                    <span class="inline-flex items-center px-4 py-1 rounded-full text-sm font-semibold bg-warning text-white">
+                        {% trans "Популярный" %}
+                    </span>
+                </div>
+                
+                <div class="mb-8">
+                    <h3 class="text-2xl font-bold text-white">Pro</h3>
+                    <p class="mt-2 text-sm text-blue-100">{% trans "Для профессионалов" %}</p>
+                    <p class="mt-6" x-data="{ annual: false }">
+                        <span class="text-4xl font-bold text-white" x-show="!annual">14 990 ₽</span>
+                        <span class="text-4xl font-bold text-white" x-show="annual">11 990 ₽</span>
+                        <span class="text-sm text-blue-100">{% trans "/месяц" %}</span>
+                    </p>
+                </div>
+                
+                <ul class="space-y-4 mb-8">
+                    <li class="flex items-start">
+                        <svg class="h-5 w-5 text-white mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-sm text-white">{% trans "До 2 000 SKU" %}</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="h-5 w-5 text-white mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-sm text-white">{% trans "Безлимитные маркетплейсы" %}</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="h-5 w-5 text-white mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-sm text-white">{% trans "Продвинутый AI-прогноз" %}</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="h-5 w-5 text-white mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-sm text-white">{% trans "Безлимитные склады" %}</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="h-5 w-5 text-white mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-sm text-white">{% trans "Telegram уведомления" %}</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="h-5 w-5 text-white mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-sm text-white">{% trans "Персональный менеджер" %}</span>
+                    </li>
+                </ul>
+                
+                <a href="{% url 'account_signup' %}?plan=pro" class="block w-full bg-white hover:bg-gray-50 text-primary font-medium py-3 px-6 rounded-lg text-center shadow-sm hover:shadow-md transition-all duration-200">
+                    {% trans "Выбрать Pro" %}
+                </a>
+            </div>
+
+            <!-- Enterprise Plan -->
+            <div class="bg-white rounded-lg shadow-soft p-8 border border-gray-200">
+                <div class="mb-8">
+                    <h3 class="text-2xl font-bold text-gray-900">Enterprise</h3>
+                    <p class="mt-2 text-sm text-gray-500">{% trans "Крупный бизнес" %}</p>
+                    <p class="mt-6">
+                        <span class="text-4xl font-bold text-gray-900">{% trans "По запросу" %}</span>
+                    </p>
+                </div>
+                
+                <ul class="space-y-4 mb-8">
+                    <li class="flex items-start">
+                        <svg class="h-5 w-5 text-success mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-sm text-gray-700">{% trans "Безлимит SKU" %}</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="h-5 w-5 text-success mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-sm text-gray-700">{% trans "Кастомные интеграции" %}</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="h-5 w-5 text-success mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-sm text-gray-700">{% trans "API доступ" %}</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="h-5 w-5 text-success mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-sm text-gray-700">{% trans "White-label" %}</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="h-5 w-5 text-success mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-sm text-gray-700">{% trans "SLA гарантии" %}</span>
+                    </li>
+                    <li class="flex items-start">
+                        <svg class="h-5 w-5 text-success mr-3 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        <span class="text-sm text-gray-700">{% trans "24/7 поддержка" %}</span>
+                    </li>
+                </ul>
+                
+                <a href="mailto:sales@forecastmp.ru" class="block w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-3 px-6 rounded-lg text-center transition-all duration-200">
+                    {% trans "Связаться с отделом продаж" %}
+                </a>
+            </div>
+        </div>
+
+        <!-- FAQ Section -->
+        <div class="mt-20 max-w-3xl mx-auto">
+            <h2 class="text-3xl font-bold text-center text-gray-900 mb-12">
+                {% trans "Часто задаваемые вопросы" %}
+            </h2>
+            
+            <div class="space-y-6" x-data="{ open: null }">
+                <div class="bg-white rounded-lg shadow-soft p-6">
+                    <button @click="open = open === 1 ? null : 1" class="w-full flex items-center justify-between text-left">
+                        <span class="text-lg font-semibold text-gray-900">{% trans "Есть ли пробный период?" %}</span>
+                        <svg class="w-5 h-5 text-gray-500 transition-transform" :class="{ 'rotate-180': open === 1 }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <div x-show="open === 1" x-transition class="mt-4 text-gray-600">
+                        {% trans "Да! Все новые пользователи получают 14-дневный бесплатный пробный период тарифа Pro с полным доступом ко всем функциям." %}
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-soft p-6">
+                    <button @click="open = open === 2 ? null : 2" class="w-full flex items-center justify-between text-left">
+                        <span class="text-lg font-semibold text-gray-900">{% trans "Можно ли изменить тариф?" %}</span>
+                        <svg class="w-5 h-5 text-gray-500 transition-transform" :class="{ 'rotate-180': open === 2 }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <div x-show="open === 2" x-transition class="mt-4 text-gray-600">
+                        {% trans "Конечно! Вы можете повысить или понизить тариф в любое время. При повышении тарифа будет произведен пропорциональный перерасчет." %}
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-soft p-6">
+                    <button @click="open = open === 3 ? null : 3" class="w-full flex items-center justify-between text-left">
+                        <span class="text-lg font-semibold text-gray-900">{% trans "Какие способы оплаты вы принимаете?" %}</span>
+                        <svg class="w-5 h-5 text-gray-500 transition-transform" :class="{ 'rotate-180': open === 3 }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <div x-show="open === 3" x-transition class="mt-4 text-gray-600">
+                        {% trans "Мы принимаем все основные банковские карты (Visa, Mastercard, МИР), а также банковские переводы для тарифа Enterprise." %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
