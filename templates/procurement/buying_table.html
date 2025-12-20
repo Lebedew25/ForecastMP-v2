@@ -267,42 +267,67 @@
 </div>
 
 <script>
-    // Select all functionality
-    document.getElementById('selectAll').addEventListener('change', function(e) {
-        const checkboxes = document.querySelectorAll('.product-checkbox');
-        checkboxes.forEach(cb => cb.checked = e.target.checked);
-        updateSelectedCount();
-    });
-
-    // Update selected count
-    function updateSelectedCount() {
+    // Update selected count - глобальная функция
+    window.updateSelectedCount = function() {
         const checkboxes = document.querySelectorAll('.product-checkbox:checked');
         const count = checkboxes.length;
-        document.getElementById('selectedCount').textContent = count;
-        document.getElementById('createOrderBtn').disabled = count === 0;
-    }
-
-    // Create order button
-    document.getElementById('createOrderBtn').addEventListener('click', function() {
-        const selectedIds = Array.from(document.querySelectorAll('.product-checkbox:checked'))
-            .map(cb => cb.value);
+        const selectedCountEl = document.getElementById('selectedCount');
+        const createOrderBtn = document.getElementById('createOrderBtn');
         
-        if (selectedIds.length > 0) {
-            // Load order creation form via HTMX
-            htmx.ajax('POST', '{% url "procurement:create_order" %}', {
-                target: '#orderModalContent',
-                swap: 'innerHTML',
-                values: { product_ids: selectedIds }
-            }).then(() => {
-                Alpine.store('createOrderModal', { show: true });
+        if (selectedCountEl) {
+            selectedCountEl.textContent = count;
+        }
+        if (createOrderBtn) {
+            createOrderBtn.disabled = count === 0;
+        }
+    };
+
+    // Инициализация после загрузки DOM
+    document.addEventListener('DOMContentLoaded', function() {
+        // Select all functionality
+        const selectAllEl = document.getElementById('selectAll');
+        if (selectAllEl) {
+            selectAllEl.addEventListener('change', function(e) {
+                const checkboxes = document.querySelectorAll('.product-checkbox');
+                checkboxes.forEach(cb => cb.checked = e.target.checked);
+                updateSelectedCount();
+            });
+        }
+
+        // Create order button
+        const createOrderBtnEl = document.getElementById('createOrderBtn');
+        if (createOrderBtnEl) {
+            createOrderBtnEl.addEventListener('click', function() {
+                const selectedIds = Array.from(document.querySelectorAll('.product-checkbox:checked'))
+                    .map(cb => cb.value);
+                
+                if (selectedIds.length > 0) {
+                    // Load order creation form via HTMX
+                    htmx.ajax('POST', '{% url "procurement:create_order" %}', {
+                        target: '#orderModalContent',
+                        swap: 'innerHTML',
+                        values: { product_ids: selectedIds }
+                    });
+                }
+            });
+        }
+
+        // Export functionality
+        const exportBtnEl = document.getElementById('exportBtn');
+        if (exportBtnEl) {
+            exportBtnEl.addEventListener('click', function() {
+                const params = new URLSearchParams(window.location.search);
+                window.location.href = '{% url "procurement:export_buying_table" %}?' + params.toString();
             });
         }
     });
-
-    // Export functionality
-    document.getElementById('exportBtn').addEventListener('click', function() {
-        const params = new URLSearchParams(window.location.search);
-        window.location.href = '{% url "procurement:export_buying_table" %}?' + params.toString();
+    
+    // Обработка событий HTMX после загрузки нового контента
+    document.body.addEventListener('htmx:afterSwap', function(evt) {
+        // Пересчитываем после загрузки новых строк
+        if (evt.detail.target.id === 'buyingTableBody') {
+            updateSelectedCount();
+        }
     });
 </script>
 {% endblock %}
