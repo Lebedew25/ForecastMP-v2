@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Планирование спроса" %}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">{% trans "Планирование спроса" %}</h1>
+            <p class="text-sm text-gray-500 mt-1">{% trans "Прогнозы продаж и анализ спроса" %}</p>
+        </div>
+        <div class="flex items-center space-x-3">
+            <button class="bg-white border border-gray-300 hover:border-primary text-gray-700 font-medium py-2 px-4 rounded-lg transition-all duration-200">
+                {% trans "Экспорт" %}
+            </button>
+            <button class="bg-primary hover:bg-primary-dark text-white font-medium py-2 px-4 rounded-lg shadow-sm hover:shadow-md transition-all duration-200">
+                {% trans "Обновить прогнозы" %}
+            </button>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Products with Forecasts Card -->
+        <div class="bg-white rounded-lg shadow-soft p-6 hover:shadow-soft-lg transition-shadow duration-300">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <h3 class="text-sm font-medium text-gray-500 mb-1">{% trans "Товаров с прогнозом" %}</h3>
+            <p class="text-2xl font-bold text-gray-900">{{ products_with_forecasts }}</p>
+            <p class="text-xs text-gray-500 mt-2">{% trans "Всего товаров в системе" %}</p>
+        </div>
+
+        <!-- Forecast Period Card -->
+        <div class="bg-white rounded-lg shadow-soft p-6 hover:shadow-soft-lg transition-shadow duration-300">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <h3 class="text-sm font-medium text-gray-500 mb-1">{% trans "Период прогноза" %}</h3>
+            <p class="text-lg font-bold text-gray-900">{{ forecast_range }}</p>
+            <p class="text-xs text-gray-500 mt-2">{% trans "Среднесрочный прогноз" %}</p>
+        </div>
+
+        <!-- Accuracy Card -->
+        <div class="bg-white rounded-lg shadow-soft p-6 hover:shadow-soft-lg transition-shadow duration-300">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center">
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                </div>
+                <span class="text-xs font-medium text-success bg-success bg-opacity-10 px-2 py-1 rounded">87%</span>
+            </div>
+            <h3 class="text-sm font-medium text-gray-500 mb-1">{% trans "Точность прогноза" %}</h3>
+            <p class="text-2xl font-bold text-gray-900">{{ avg_accuracy }}%</p>
+            <p class="text-xs text-gray-500 mt-2">{% trans "Средняя точность" %}</p>
+        </div>
+    </div>
+
+    <!-- Forecasts Table -->
+    <div class="bg-white rounded-lg shadow-soft p-6">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-lg font-semibold text-gray-900">{% trans "Прогнозы продаж" %}</h3>
+            <div class="flex space-x-2">
+                <select class="border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                    <option>{% trans "Все категории" %}</option>
+                    <option>{% trans "Одежда" %}</option>
+                    <option>{% trans "Обувь" %}</option>
+                    <option>{% trans "Аксессуары" %}</option>
+                </select>
+                <input type="text" placeholder="{% trans 'Поиск по SKU или названию...' %}" class="border border-gray-300 rounded-lg px-3 py-2 text-sm w-64">
+            </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{% trans "Товар" %}</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{% trans "SKU" %}</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{% trans "Категория" %}</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{% trans "Текущий остаток" %}</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{% trans "Прогноз на 7 дней" %}</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{% trans "Прогноз на 30 дней" %}</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{% trans "Точность" %}</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for forecast in forecasts %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">{{ forecast.product.name }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ forecast.product.sku }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ forecast.product.category|default:"—" }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ forecast.product.current_stock }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <span class="text-gray-900">{{ forecast.predicted_quantity }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <span class="text-gray-900">{{ forecast.confidence_score }}%</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                {{ forecast.confidence_score|floatformat:0 }}%
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-4 text-center text-sm text-gray-500">
+                            {% trans "Нет доступных прогнозов" %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="mt-6 flex items-center justify-between">
+            <div class="text-sm text-gray-500">
+                {% trans "Показано" %} <span class="font-medium">{{ forecasts|length }}</span> {% trans "из" %} <span class="font-medium">{{ forecasts|length }}</span> {% trans "прогнозов" %}
+            </div>
+            <div class="flex space-x-2">
+                <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    {% trans "Предыдущая" %}
+                </button>
+                <button class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    {% trans "Следующая" %}
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Forecast Accuracy Chart -->
+        <div class="bg-white rounded-lg shadow-soft p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-6">{% trans "Точность прогноза по категориям" %}</h3>
+            <div class="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+                <div class="text-center">
+                    <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    <p class="text-gray-500">{% trans "График точности прогноза" %}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Seasonal Trends Chart -->
+        <div class="bg-white rounded-lg shadow-soft p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-6">{% trans "Сезонные тренды" %}</h3>
+            <div class="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
+                <div class="text-center">
+                    <svg class="w-12 h-12 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"/>
+                    </svg>
+                    <p class="text-gray-500">{% trans "График сезонных трендов" %}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.core.paginator import Paginator
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Case, When, IntegerField
 from datetime import date, timedelta
 import csv
 from .models import ProcurementRecommendation, PurchaseOrder, PurchaseOrderItem
@@ -24,10 +24,11 @@ def dashboard(request):
         analysis_date=today
     ).select_related('product').order_by('-priority_score')
     
-    # Split by category
-    order_today = recommendations.filter(action_category='ORDER_TODAY')
-    already_ordered = recommendations.filter(action_category='ALREADY_ORDERED')
-    attention_required = recommendations.filter(action_category='ATTENTION_REQUIRED')
+    # Split by category - use lists to evaluate queryset once
+    all_recommendations = list(recommendations)  # Evaluate queryset once
+    order_today = [r for r in all_recommendations if r.action_category == 'ORDER_TODAY']
+    already_ordered = [r for r in all_recommendations if r.action_category == 'ALREADY_ORDERED']
+    attention_required = [r for r in all_recommendations if r.action_category == 'ATTENTION_REQUIRED']
     
     context = {
         'company': company,
@@ -36,10 +37,10 @@ def dashboard(request):
         'already_ordered': already_ordered,
         'attention_required': attention_required,
         'summary': {
-            'total_products': recommendations.count(),
-            'order_today_count': order_today.count(),
-            'already_ordered_count': already_ordered.count(),
-            'attention_required_count': attention_required.count(),
+            'total_products': len(all_recommendations),
+            'order_today_count': len(order_today),
+            'already_ordered_count': len(already_ordered),
+            'attention_required_count': len(attention_required),
         }
     }
     
@@ -157,13 +158,14 @@ def buying_table(request):
             Q(product__name__icontains=search)
         )
     
-    # Calculate summary stats
-    summary = {
-        'normal_count': recommendations.filter(action_category='NORMAL').count(),
-        'attention_count': recommendations.filter(action_category='ATTENTION_REQUIRED').count(),
-        'order_today_count': recommendations.filter(action_category='ORDER_TODAY').count(),
-        'already_ordered_count': recommendations.filter(action_category='ALREADY_ORDERED').count(),
-    }
+    # Calculate summary stats with single optimized query
+    summary_result = recommendations.aggregate(
+        normal_count=Count(Case(When(action_category='NORMAL', then=1), output_field=IntegerField())),
+        attention_count=Count(Case(When(action_category='ATTENTION_REQUIRED', then=1), output_field=IntegerField())),
+        order_today_count=Count(Case(When(action_category='ORDER_TODAY', then=1), output_field=IntegerField())),
+        already_ordered_count=Count(Case(When(action_category='ALREADY_ORDERED', then=1), output_field=IntegerField())),
+    )
+    summary = summary_result
     
     # Get unique categories and suppliers for filters
     categories = Product.objects.filter(
@@ -409,14 +411,15 @@ def purchase_orders(request):
             Q(supplier_name__icontains=search)
         )
     
-    # Calculate stats
-    stats = {
-        'draft_count': PurchaseOrder.objects.filter(company=company, status='DRAFT').count(),
-        'submitted_count': PurchaseOrder.objects.filter(company=company, status='SUBMITTED').count(),
-        'confirmed_count': PurchaseOrder.objects.filter(company=company, status='CONFIRMED').count(),
-        'in_transit_count': PurchaseOrder.objects.filter(company=company, status='IN_TRANSIT').count(),
-        'delivered_count': PurchaseOrder.objects.filter(company=company, status='DELIVERED').count(),
-    }
+    # Calculate stats with single optimized query
+    stats_result = PurchaseOrder.objects.filter(company=company).aggregate(
+        draft_count=Count(Case(When(status='DRAFT', then=1), output_field=IntegerField())),
+        submitted_count=Count(Case(When(status='SUBMITTED', then=1), output_field=IntegerField())),
+        confirmed_count=Count(Case(When(status='CONFIRMED', then=1), output_field=IntegerField())),
+        in_transit_count=Count(Case(When(status='IN_TRANSIT', then=1), output_field=IntegerField())),
+        delivered_count=Count(Case(When(status='DELIVERED', then=1), output_field=IntegerField())),
+    )
+    stats = stats_result
     
     # Pagination
     paginator = Paginator(orders.order_by('-order_date'), 25)

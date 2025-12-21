@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.db.models import Q
+from django.shortcuts import render
 import json
 from datetime import datetime, date
 from .inventory_service import (
@@ -533,6 +534,24 @@ class WebhookHandlerView(View):
                 'success': False,
                 'error': 'Failed to process inventory update'
             }, status=500)
+
+
+@login_required
+def warehouses(request):
+    """Display all warehouses for the company"""
+    company = request.user.company
+    
+    if not company:
+        return render(request, 'procurement/no_company.html')
+    
+    # Get all warehouses for the company
+    warehouses = Warehouse.objects.filter(company=company).order_by('-is_primary', 'name')
+    
+    context = {
+        'warehouses': warehouses,
+    }
+    
+    return render(request, 'sales/warehouses.html', context)
 
 
 # Convenience view functions for URL routing

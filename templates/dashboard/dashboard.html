@@ -132,7 +132,7 @@
         <div class="bg-white rounded-lg shadow-soft p-6">
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-lg font-semibold text-gray-900">{% trans "Срочные товары" %}</h3>
-                <a href="#" class="text-sm text-primary hover:text-primary-dark">{% trans "Все товары" %} →</a>
+                <a href="{% url 'procurement:buying_table' %}" class="text-sm text-primary hover:text-primary-dark">{% trans "Все товары" %} →</a>
             </div>
             <div class="space-y-3">
                 <div class="flex items-center justify-between p-3 bg-red-50 rounded-lg border-l-4 border-danger">
@@ -173,7 +173,7 @@
     <div class="bg-white rounded-lg shadow-soft p-6">
         <h3 class="text-lg font-semibold text-gray-900 mb-4">{% trans "Быстрые действия" %}</h3>
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <a href="#" class="flex items-center p-4 border-2 border-gray-200 hover:border-primary rounded-lg transition-colors group">
+            <a href="{% url 'procurement:buying_table' %}" class="flex items-center p-4 border-2 border-gray-200 hover:border-primary rounded-lg transition-colors group">
                 <div class="w-10 h-10 bg-primary bg-opacity-10 rounded-lg flex items-center justify-center group-hover:bg-opacity-20 transition-colors">
                     <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
@@ -183,7 +183,7 @@
                     <p class="text-sm font-medium text-gray-900">{% trans "Таблица закупок" %}</p>
                 </div>
             </a>
-            <a href="#" class="flex items-center p-4 border-2 border-gray-200 hover:border-primary rounded-lg transition-colors group">
+            <a href="{% url 'procurement:buying_table' %}" class="flex items-center p-4 border-2 border-gray-200 hover:border-primary rounded-lg transition-colors group">
                 <div class="w-10 h-10 bg-primary bg-opacity-10 rounded-lg flex items-center justify-center group-hover:bg-opacity-20 transition-colors">
                     <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -193,7 +193,7 @@
                     <p class="text-sm font-medium text-gray-900">{% trans "Создать заказ" %}</p>
                 </div>
             </a>
-            <a href="#" class="flex items-center p-4 border-2 border-gray-200 hover:border-primary rounded-lg transition-colors group">
+            <a href="{% url 'forecasting:dashboard' %}" class="flex items-center p-4 border-2 border-gray-200 hover:border-primary rounded-lg transition-colors group">
                 <div class="w-10 h-10 bg-primary bg-opacity-10 rounded-lg flex items-center justify-center group-hover:bg-opacity-20 transition-colors">
                     <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
@@ -203,7 +203,7 @@
                     <p class="text-sm font-medium text-gray-900">{% trans "Прогноз спроса" %}</p>
                 </div>
             </a>
-            <a href="#" class="flex items-center p-4 border-2 border-gray-200 hover:border-primary rounded-lg transition-colors group">
+            <button onclick="exportDashboardData()" class="flex items-center p-4 border-2 border-gray-200 hover:border-primary rounded-lg transition-colors group text-left">
                 <div class="w-10 h-10 bg-primary bg-opacity-10 rounded-lg flex items-center justify-center group-hover:bg-opacity-20 transition-colors">
                     <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
@@ -212,8 +212,112 @@
                 <div class="ml-3">
                     <p class="text-sm font-medium text-gray-900">{% trans "Экспорт отчета" %}</p>
                 </div>
-            </a>
+            </button>
         </div>
     </div>
 </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function exportDashboardData() {
+    // Показываем индикатор загрузки
+    const button = event.currentTarget;
+    const originalContent = button.innerHTML;
+    button.disabled = true;
+    button.classList.add('opacity-50', 'cursor-not-allowed');
+    
+    // Получаем метрики дашборда
+    fetch('/dashboard/api/dashboard/metrics/')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Подготавливаем данные для экспорта в CSV
+                const metrics = data.metrics;
+                
+                // Формируем CSV контент
+                let csvContent = "data:text/csv;charset=utf-8,";
+                csvContent += "\uFEFF"; // UTF-8 BOM для корректного отображения кириллицы
+                
+                // Заголовок отчета
+                csvContent += "Отчет дашборда ForecastMP\n";
+                csvContent += "Дата создания:," + new Date().toLocaleString('ru-RU') + "\n\n";
+                
+                // KPI метрики
+                csvContent += "Метрика,Значение\n";
+                
+                if (metrics.inventory_value) {
+                    csvContent += "Стоимость запасов," + metrics.inventory_value.value + " ₽\n";
+                }
+                
+                if (metrics.inventory_turnover) {
+                    csvContent += "Оборачиваемость запасов," + metrics.inventory_turnover.turnover_days + " дней\n";
+                }
+                
+                if (metrics.stock_status) {
+                    csvContent += "\nРаспределение статусов\n";
+                    csvContent += "Статус,Количество,Процент\n";
+                    Object.entries(metrics.stock_status.distribution).forEach(([status, count]) => {
+                        const percentage = ((count / metrics.stock_status.total_products) * 100).toFixed(1);
+                        csvContent += status + "," + count + "," + percentage + "%\n";
+                    });
+                }
+                
+                if (metrics.urgent_products && metrics.urgent_products.products.length > 0) {
+                    csvContent += "\nСрочные товары\n";
+                    csvContent += "SKU,Название,Текущий запас,Прогноз (дни),Рекомендуемый заказ\n";
+                    metrics.urgent_products.products.forEach(product => {
+                        csvContent += product.sku + "," + 
+                                    product.name + "," + 
+                                    product.current_stock + "," + 
+                                    product.days_until_stockout + "," + 
+                                    product.recommended_order + "\n";
+                    });
+                }
+                
+                // Создаем и скачиваем файл
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                const timestamp = new Date().toISOString().split('T')[0];
+                link.setAttribute("download", "dashboard_report_" + timestamp + ".csv");
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Показываем уведомление об успехе
+                showNotification('Отчет успешно экспортирован', 'success');
+            } else {
+                showNotification('Ошибка при получении данных', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Export error:', error);
+            showNotification('Ошибка при экспорте данных', 'error');
+        })
+        .finally(() => {
+            // Восстанавливаем кнопку
+            button.disabled = false;
+            button.classList.remove('opacity-50', 'cursor-not-allowed');
+        });
+}
+
+function showNotification(message, type = 'info') {
+    const container = document.getElementById('toast-container');
+    const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+    
+    const toast = document.createElement('div');
+    toast.className = `${bgColor} text-white px-6 py-3 rounded-lg shadow-lg transition-opacity duration-300`;
+    toast.textContent = message;
+    
+    container.appendChild(toast);
+    
+    // Автоматически удаляем через 3 секунды
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => container.removeChild(toast), 300);
+    }, 3000);
+}
+</script>
 {% endblock %}

@@ -74,7 +74,7 @@
                     </li>
                 </ul>
                 
-                <a href="{% url 'account_signup' %}" class="block w-full bg-white border-2 border-gray-300 hover:border-primary text-gray-700 font-medium py-3 px-6 rounded-lg text-center transition-all duration-200">
+                <a href="{% url 'accounts:login' %}" class="block w-full bg-white border-2 border-gray-300 hover:border-primary text-gray-700 font-medium py-3 px-6 rounded-lg text-center transition-all duration-200">
                     {% trans "Начать бесплатно" %}
                 </a>
             </div>
@@ -130,7 +130,7 @@
                     </li>
                 </ul>
                 
-                <a href="{% url 'account_signup' %}?plan=mini" class="block w-full bg-primary hover:bg-primary-dark text-white font-medium py-3 px-6 rounded-lg text-center shadow-sm hover:shadow-md transition-all duration-200">
+                <a href="{% url 'accounts:login' %}?plan=mini" class="block w-full bg-primary hover:bg-primary-dark text-white font-medium py-3 px-6 rounded-lg text-center shadow-sm hover:shadow-md transition-all duration-200">
                     {% trans "Выбрать Mini" %}
                 </a>
             </div>
@@ -192,7 +192,7 @@
                     </li>
                 </ul>
                 
-                <a href="{% url 'account_signup' %}?plan=pro" class="block w-full bg-white hover:bg-gray-50 text-primary font-medium py-3 px-6 rounded-lg text-center shadow-sm hover:shadow-md transition-all duration-200">
+                <a href="{% url 'accounts:login' %}?plan=pro" class="block w-full bg-white hover:bg-gray-50 text-primary font-medium py-3 px-6 rounded-lg text-center shadow-sm hover:shadow-md transition-all duration-200">
                     {% trans "Выбрать Pro" %}
                 </a>
             </div>

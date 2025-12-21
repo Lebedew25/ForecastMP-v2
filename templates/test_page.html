@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Test Page{% endblock %}
+
+{% block content %}
+<div class="p-8">
+    <h1 class="text-3xl font-bold mb-4">Тестовая страница</h1>
+    <p class="mb-4">Если вы видите эту страницу, значит base.html работает.</p>
+    
+    <button onclick="alert('JavaScript работает!')" class="px-4 py-2 bg-blue-500 text-white rounded">
+        Нажмите для проверки JS
+    </button>
+    
+    <div class="mt-8 space-y-4">
+        <p>Прокрутите вниз ↓</p>
+        <div style="height: 2000px; background: linear-gradient(to bottom, #f0f0f0, #ffffff);">
+            <p class="text-center pt-96">Контент для проверки прокрутки</p>
+        </div>
+        <p>Конец страницы</p>
+    </div>
+</div>
+{% endblock %}

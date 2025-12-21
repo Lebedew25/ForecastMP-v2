@@ -7,6 +7,9 @@ from . import views
 app_name = 'sales'
 
 urlpatterns = [
+    # Warehouse management page
+    path('warehouses/', views.warehouses, name='warehouses'),
+    
     # Inventory management API endpoints
     path('api/inventory/adjust/', views.inventory_adjustment, name='inventory_adjustment'),
     path('api/inventory/transfer/', views.inventory_transfer, name='inventory_transfer'),

@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.views.decorators.cache import never_cache
 from django.conf import settings
 from urllib.parse import urlparse
+from accounts.models import Company
 
 def user_login(request):
     """Custom login view for regular users"""
@@ -60,3 +61,79 @@ def user_logout(request):
         return redirect('/admin/login/')
     else:
         return redirect('accounts:login')
+
+
+@login_required
+def settings_view(request):
+    """Settings page view"""
+    company = request.user.company
+    
+    context = {
+        'company': company,
+    }
+    
+    return render(request, 'accounts/settings.html', context)
+
+
+@login_required
+def subscription_view(request):
+    """Subscription page view"""
+    company = request.user.company
+    
+    # Mock data for subscription info
+    subscription = {
+        'plan': 'PRO',
+        'get_plan_display': 'Pro',
+        'status': 'ACTIVE',
+        'current_period_end': '2024-12-31',
+        'trial_end': None,
+    }
+    
+    # Mock data for plan limits
+    plan_limits = {
+        'max_skus': 2000,
+        'max_integrations': None,  # Unlimited
+        'max_warehouses': None,   # Unlimited
+        'ai_forecasting': True,
+        'telegram_notifications': True,
+        'api_access': True,
+        'white_label': True,
+    }
+    
+    # Mock data for usage
+    usage = {
+        'sku_count': 1250,
+        'integration_count': 3,
+        'warehouse_count': 5,
+    }
+    
+    # Mock data for invoices
+    invoices = [
+        {
+            'invoice_date': '2023-11-01',
+            'description': 'Pro Plan (November 2023)',
+            'amount': '14990',
+            'status': 'PAID',
+        },
+        {
+            'invoice_date': '2023-10-01',
+            'description': 'Pro Plan (October 2023)',
+            'amount': '14990',
+            'status': 'PAID',
+        }
+    ]
+    
+    context = {
+        'company': company,
+        'subscription': subscription,
+        'plan_limits': plan_limits,
+        'usage': usage,
+        'invoices': invoices,
+    }
+    
+    return render(request, 'accounts/subscription.html', context)
+
+
+def pricing_view(request):
+    """Pricing page view for public access"""
+    return render(request, 'pricing.html')

@@ -1,9 +1,11 @@
 from django.urls import path
+from django.views.generic import TemplateView
 from . import views
 
 app_name = 'procurement'
 
 urlpatterns = [
+    path('test/', TemplateView.as_view(template_name='test_page.html'), name='test_page'),  # Test page
     path('', views.dashboard, name='dashboard'),
     path('buying-table/', views.buying_table, name='buying_table'),
     path('orders/', views.purchase_orders, name='purchase_orders'),

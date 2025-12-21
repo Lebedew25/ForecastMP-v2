@@ -20,4 +20,5 @@ urlpatterns = [
     path('telegram/', include('telegram_notifications.urls')),
     path('export/', include('export.urls')),
     path('api/', include('dashboard.urls')),
+    path('forecasting/', include('forecasting.urls')),
 ]

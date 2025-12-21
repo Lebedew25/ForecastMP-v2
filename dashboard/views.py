@@ -226,3 +226,9 @@ class ForecastAccuracyView(View):
                 'success': False,
                 'error': 'Internal server error'
             }, status=500)
+
+
+@login_required
+def analytics_view(request):
+    """Analytics dashboard view"""
+    return render(request, 'dashboard/analytics.html')
