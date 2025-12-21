@@ -6,6 +6,9 @@ from datetime import date, timedelta
 from decimal import Decimal
 from typing import Dict, List, Tuple
 from django.db.models import Sum, Q
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ProcurementAnalyzer:
@@ -22,21 +25,36 @@ class ProcurementAnalyzer:
         
         # Get product-specific settings
         self.attributes = getattr(product, 'extended_attributes', None)
-        self.reorder_threshold = self.attributes.reorder_threshold_days if self.attributes else 7
-        self.lead_time = self.attributes.lead_time_days if self.attributes else 14
-        self.safety_stock_days = self.attributes.safety_stock_days if self.attributes else 3
-        self.min_order_qty = self.attributes.minimum_order_quantity if self.attributes else 1
+        
+        if self.attributes:
+            self.reorder_threshold = self.attributes.reorder_threshold_days
+            self.lead_time = self.attributes.lead_time_days
+            self.safety_stock_days = self.attributes.safety_stock_days
+            self.min_order_qty = self.attributes.minimum_order_quantity
+        else:
+            # Use default values and log warning
+            logger.warning(
+                f"Product {product.sku} (ID: {product.id}) has no ProductAttributes. "
+                f"Using default procurement settings: reorder_threshold=7, lead_time=14, "
+                f"safety_stock=3, min_order_qty=1"
+            )
+            self.reorder_threshold = 7
+            self.lead_time = 14
+            self.safety_stock_days = 3
+            self.min_order_qty = 1
     
     def get_current_inventory(self) -> int:
-        """Get current available inventory"""
+        """Get current available inventory across all warehouses"""
         from sales.models import InventorySnapshot
+        from django.db.models import Sum
         
-        snapshot = InventorySnapshot.objects.filter(
+        # Sum inventory across all warehouses for this product on the current date
+        total = InventorySnapshot.objects.filter(
             product=self.product,
             snapshot_date=self.current_date
-        ).order_by('-snapshot_date').first()
+        ).aggregate(total=Sum('quantity_available'))['total']
         
-        return snapshot.quantity_available if snapshot else 0
+        return total or 0
     
     def calculate_daily_burn_rate(self, lookback_days: int = 30) -> Decimal:
         """Calculate average daily sales over lookback period"""
@@ -72,13 +90,14 @@ class ProcurementAnalyzer:
         return self.current_date + timedelta(days=runway_days)
     
     def get_in_transit_quantity(self) -> int:
-        """Get quantity from active purchase orders"""
+        """Get quantity from active purchase orders for this company"""
         from procurement.models import PurchaseOrderItem, PurchaseOrder
         
         in_transit_statuses = ['SUBMITTED', 'CONFIRMED', 'IN_TRANSIT']
         
         po_items = PurchaseOrderItem.objects.filter(
             product=self.product,
+            purchase_order__company=self.product.company,
             purchase_order__status__in=in_transit_statuses
         )
         

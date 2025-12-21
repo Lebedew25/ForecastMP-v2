@@ -4,7 +4,8 @@ Dashboard metrics calculation service
 import logging
 from typing import Dict, List, Any
 from datetime import datetime, timedelta
-from django.db.models import Sum, Avg, Count, Q
+from django.db.models import Sum, Avg, Count, Q, F, DecimalField, OuterRef, Subquery, Case, When, Value, FloatField
+from django.db.models.functions import Coalesce
 from products.models import Product
 from sales.models import SalesTransaction, InventorySnapshot
 from procurement.models import ProcurementRecommendation
@@ -20,44 +21,39 @@ class DashboardMetricsService:
         self.company = company
     
     def get_total_inventory_value(self) -> Dict[str, Any]:
-        """Calculate total inventory value across all warehouses"""
+        """Calculate total inventory value across all warehouses - OPTIMIZED"""
         try:
-            # Get all active products for the company
-            products = Product.objects.filter(
+            week_ago = datetime.now() - timedelta(days=7)
+            
+            # Subquery for latest inventory snapshot per product
+            latest_snapshot_subquery = InventorySnapshot.objects.filter(
+                product=OuterRef('pk')
+            ).order_by('-snapshot_date').values('quantity_available')[:1]
+            
+            # Subquery for snapshot from week ago
+            week_ago_snapshot_subquery = InventorySnapshot.objects.filter(
+                product=OuterRef('pk'),
+                snapshot_date__lte=week_ago.date()
+            ).order_by('-snapshot_date').values('quantity_available')[:1]
+            
+            # Single aggregated query instead of N+1 loops
+            result = Product.objects.filter(
                 company=self.company,
                 is_active=True
+            ).annotate(
+                latest_qty=Coalesce(Subquery(latest_snapshot_subquery), Value(0)),
+                week_ago_qty=Coalesce(Subquery(week_ago_snapshot_subquery), Value(0)),
+                current_value=F('latest_qty') * Coalesce(F('cost_price'), Value(0), output_field=DecimalField()),
+                previous_value=F('week_ago_qty') * Coalesce(F('cost_price'), Value(0), output_field=DecimalField())
+            ).aggregate(
+                total_value=Coalesce(Sum('current_value'), Value(0)),
+                previous_value=Coalesce(Sum('previous_value'), Value(0)),
+                product_count=Count('id')
             )
             
-            total_value = 0
-            product_count = products.count()
-            
-            # Calculate value for each product
-            for product in products:
-                # Get latest inventory snapshot for this product
-                latest_snapshot = InventorySnapshot.objects.filter(
-                    product=product
-                ).order_by('-created_at').first()
-                
-                if latest_snapshot:
-                    quantity = latest_snapshot.quantity_available
-                    cost_price = product.cost_price or 0
-                    total_value += quantity * cost_price
-            
-            # Compare with previous period (last week)
-            week_ago = datetime.now() - timedelta(days=7)
-            previous_value = 0
-            
-            for product in products:
-                # Get inventory snapshot from a week ago
-                snapshot_week_ago = InventorySnapshot.objects.filter(
-                    product=product,
-                    created_at__date__lte=week_ago.date()
-                ).order_by('-created_at').first()
-                
-                if snapshot_week_ago:
-                    quantity = snapshot_week_ago.quantity_available
-                    cost_price = product.cost_price or 0
-                    previous_value += quantity * cost_price
+            total_value = float(result['total_value'] or 0)
+            previous_value = float(result['previous_value'] or 0)
+            product_count = result['product_count'] or 0
             
             # Calculate change percentage
             if previous_value > 0:
@@ -81,65 +77,61 @@ class DashboardMetricsService:
             }
     
     def get_average_inventory_turnover(self) -> Dict[str, Any]:
-        """Calculate average inventory turnover rate"""
+        """Calculate average inventory turnover rate - OPTIMIZED"""
         try:
             # Calculate for last 30 days
             thirty_days_ago = datetime.now() - timedelta(days=30)
             
-            # Get all active products with sales in the last 30 days
-            products_with_sales = Product.objects.filter(
+            # Subquery for total sales per product
+            sales_subquery = SalesTransaction.objects.filter(
+                product=OuterRef('pk'),
+                sale_date__gte=thirty_days_ago
+            ).values('product').annotate(
+                total=Sum('quantity')
+            ).values('total')[:1]
+            
+            # Subquery for start inventory
+            start_inventory_subquery = InventorySnapshot.objects.filter(
+                product=OuterRef('pk'),
+                snapshot_date__gte=thirty_days_ago
+            ).order_by('snapshot_date').values('quantity_available')[:1]
+            
+            # Subquery for end inventory
+            end_inventory_subquery = InventorySnapshot.objects.filter(
+                product=OuterRef('pk'),
+                snapshot_date__gte=thirty_days_ago
+            ).order_by('-snapshot_date').values('quantity_available')[:1]
+            
+            # Single aggregated query with all calculations
+            products_data = Product.objects.filter(
                 company=self.company,
                 is_active=True,
-                salestransaction__transaction_date__gte=thirty_days_ago
-            ).distinct()
+                salestransaction__sale_date__gte=thirty_days_ago
+            ).distinct().annotate(
+                total_sales=Coalesce(Subquery(sales_subquery), Value(0)),
+                start_inv=Coalesce(Subquery(start_inventory_subquery), Value(0)),
+                end_inv=Coalesce(Subquery(end_inventory_subquery), Value(0))
+            ).annotate(
+                avg_inventory=(F('start_inv') + F('end_inv')) / 2.0
+            ).filter(
+                total_sales__gt=0,
+                avg_inventory__gt=0
+            ).annotate(
+                turnover_rate=F('total_sales') / F('avg_inventory'),
+                turnover_days=Case(
+                    When(turnover_rate__gt=0, then=Value(30.0) / F('turnover_rate')),
+                    default=Value(0.0),
+                    output_field=FloatField()
+                )
+            ).aggregate(
+                total_turnover_days=Coalesce(Sum('turnover_days'), Value(0.0)),
+                valid_products=Count('id')
+            )
             
-            if not products_with_sales.exists():
-                return {
-                    'success': True,
-                    'turnover_days': 0,
-                    'turnover_rate': 0,
-                    'product_count': 0
-                }
-            
-            total_turnover_days = 0
-            valid_products = 0
-            
-            for product in products_with_sales:
-                # Calculate total sales in the period
-                total_sales = SalesTransaction.objects.filter(
-                    product=product,
-                    transaction_date__gte=thirty_days_ago
-                ).aggregate(total=Sum('quantity'))['total'] or 0
-                
-                if total_sales <= 0:
-                    continue
-                
-                # Calculate average inventory during the period
-                inventory_snapshots = InventorySnapshot.objects.filter(
-                    product=product,
-                    created_at__gte=thirty_days_ago
-                ).order_by('created_at')
-                
-                if not inventory_snapshots.exists():
-                    continue
-                
-                # Simple average of start and end inventory
-                start_inventory = inventory_snapshots.first().quantity_available
-                end_inventory = inventory_snapshots.last().quantity_available
-                avg_inventory = (start_inventory + end_inventory) / 2
-                
-                if avg_inventory <= 0:
-                    continue
-                
-                # Calculate turnover rate for this product
-                turnover_rate = total_sales / avg_inventory
-                turnover_days = 30 / turnover_rate if turnover_rate > 0 else 0
-                
-                total_turnover_days += turnover_days
-                valid_products += 1
+            valid_products = products_data['valid_products'] or 0
             
             if valid_products > 0:
-                avg_turnover_days = total_turnover_days / valid_products
+                avg_turnover_days = products_data['total_turnover_days'] / valid_products
             else:
                 avg_turnover_days = 0
             
@@ -294,58 +286,61 @@ class DashboardMetricsService:
             }
     
     def get_forecast_accuracy(self) -> Dict[str, Any]:
-        """Calculate forecast accuracy if sufficient history exists"""
+        """Calculate forecast accuracy if sufficient history exists - OPTIMIZED"""
         try:
             # Need at least 14 days of data for meaningful accuracy calculation
             two_weeks_ago = datetime.now() - timedelta(days=14)
             
-            # Get products with both forecasts and actual sales
-            products_with_data = Product.objects.filter(
+            # Subquery for forecasted sales per product
+            forecast_subquery = Forecast.objects.filter(
+                product=OuterRef('pk'),
+                generated_at__gte=two_weeks_ago
+            ).values('product').annotate(
+                total=Sum('predicted_quantity')
+            ).values('total')[:1]
+            
+            # Subquery for actual sales per product
+            actual_sales_subquery = SalesTransaction.objects.filter(
+                product=OuterRef('pk'),
+                sale_date__gte=two_weeks_ago
+            ).values('product').annotate(
+                total=Sum('quantity')
+            ).values('total')[:1]
+            
+            # Single aggregated query with accuracy calculation
+            products_data = Product.objects.filter(
                 company=self.company,
                 is_active=True,
                 forecasting_forecast__generated_at__gte=two_weeks_ago,
-                salestransaction__transaction_date__gte=two_weeks_ago
-            ).distinct()
+                salestransaction__sale_date__gte=two_weeks_ago
+            ).distinct().annotate(
+                forecasted_sales=Coalesce(Subquery(forecast_subquery), Value(0.0)),
+                actual_sales=Coalesce(Subquery(actual_sales_subquery), Value(0.0))
+            ).filter(
+                actual_sales__gt=0,
+                forecasted_sales__gt=0
+            ).annotate(
+                abs_error=Case(
+                    When(actual_sales__gt=0, 
+                         then=(F('forecasted_sales') - F('actual_sales')) * 100.0 / F('actual_sales')),
+                    default=Value(0.0),
+                    output_field=FloatField()
+                )
+            ).annotate(
+                abs_error_positive=Case(
+                    When(abs_error__lt=0, then=-F('abs_error')),
+                    default=F('abs_error'),
+                    output_field=FloatField()
+                )
+            ).aggregate(
+                total_error=Coalesce(Sum('abs_error_positive'), Value(0.0)),
+                product_count=Count('id')
+            )
             
-            if not products_with_data.exists():
-                return {
-                    'success': True,
-                    'accuracy_percentage': 0,
-                    'trend': 'insufficient_data',
-                    'message': 'Insufficient data for accuracy calculation'
-                }
-            
-            total_forecast_error = 0
-            total_actual_sales = 0
-            product_count = 0
-            
-            for product in products_with_data:
-                # Get forecasts for the last 14 days
-                forecasts = Forecast.objects.filter(
-                    product=product,
-                    generated_at__gte=two_weeks_ago
-                ).order_by('forecast_date')
-                
-                if not forecasts.exists():
-                    continue
-                
-                # Get actual sales for the same period
-                actual_sales = SalesTransaction.objects.filter(
-                    product=product,
-                    transaction_date__gte=two_weeks_ago
-                ).aggregate(total=Sum('quantity'))['total'] or 0
-                
-                # Calculate forecasted sales for the same period
-                forecasted_sales = sum(f.predicted_quantity for f in forecasts)
-                
-                if actual_sales > 0:
-                    # Calculate absolute percentage error
-                    error = abs(forecasted_sales - actual_sales) / actual_sales * 100
-                    total_forecast_error += error
-                    total_actual_sales += actual_sales
-                    product_count += 1
+            product_count = products_data['product_count'] or 0
             
             if product_count > 0:
+                total_forecast_error = products_data['total_error'] or 0
                 avg_accuracy = 100 - (total_forecast_error / product_count)
                 
                 # Determine trend (simplified)

@@ -3,10 +3,14 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.core.paginator import Paginator
 from django.db.models import Q, Count, Case, When, IntegerField
+from django.db import transaction
 from datetime import date, timedelta
 import csv
+import logging
 from .models import ProcurementRecommendation, PurchaseOrder, PurchaseOrderItem
 from products.models import Product
+
+logger = logging.getLogger(__name__)
 
 
 @login_required
@@ -226,43 +230,102 @@ def submit_order(request):
     if request.method == 'POST':
         company = request.user.company
         
-        # Generate PO number
-        today = date.today()
-        po_count = PurchaseOrder.objects.filter(
-            company=company,
-            order_date=today
-        ).count()
-        po_number = f"PO-{today.strftime('%Y%m%d')}-{po_count + 1:03d}"
+        if not company:
+            return JsonResponse({'error': 'No company associated'}, status=400)
         
-        # Create PO
-        po = PurchaseOrder.objects.create(
-            company=company,
-            po_number=po_number,
-            order_date=today,
-            expected_delivery=today + timedelta(days=14),  # Default 14 days
-            status='DRAFT',
-            supplier_name=request.POST.get('supplier_name', ''),
-            notes=request.POST.get('notes', '')
-        )
-        
-        # Add items
-        product_ids = request.POST.getlist('product_ids')
-        for product_id in product_ids:
-            quantity = request.POST.get(f'quantity_{product_id}')
-            if quantity and int(quantity) > 0:
-                product = Product.objects.get(id=product_id, company=company)
-                PurchaseOrderItem.objects.create(
-                    purchase_order=po,
-                    product=product,
-                    quantity_ordered=int(quantity),
-                    unit_cost=request.POST.get(f'unit_cost_{product_id}', 0)
+        try:
+            with transaction.atomic():
+                # Generate PO number with database lock to prevent race conditions
+                today = date.today()
+                
+                # Lock the table to ensure unique PO number generation
+                po_count = PurchaseOrder.objects.select_for_update().filter(
+                    company=company,
+                    order_date=today
+                ).count()
+                
+                po_number = f"PO-{today.strftime('%Y%m%d')}-{po_count + 1:03d}"
+                
+                # Validate expected delivery date
+                expected_delivery_str = request.POST.get('expected_delivery')
+                if expected_delivery_str:
+                    try:
+                        from django.utils.dateparse import parse_date
+                        expected_delivery = parse_date(expected_delivery_str)
+                    except (ValueError, TypeError):
+                        expected_delivery = today + timedelta(days=14)
+                else:
+                    expected_delivery = today + timedelta(days=14)
+                
+                # Create PO
+                po = PurchaseOrder.objects.create(
+                    company=company,
+                    po_number=po_number,
+                    order_date=today,
+                    expected_delivery=expected_delivery,
+                    status='DRAFT',
+                    supplier_name=request.POST.get('supplier_name', ''),
+                    notes=request.POST.get('notes', '')
                 )
-        
-        # Update PO status
-        po.status = 'SUBMITTED'
-        po.save()
-        
-        return redirect('procurement:purchase_order_detail', po_id=po.id)
+                
+                # Add items with validation
+                product_ids = request.POST.getlist('product_ids')
+                if not product_ids:
+                    raise ValueError('No products selected')
+                
+                items_created = 0
+                for product_id in product_ids:
+                    try:
+                        quantity_str = request.POST.get(f'quantity_{product_id}')
+                        if not quantity_str:
+                            continue
+                        
+                        quantity = int(quantity_str)
+                        if quantity <= 0:
+                            logger.warning(f"Invalid quantity {quantity} for product {product_id}")
+                            continue
+                        
+                        # Verify product belongs to company
+                        product = Product.objects.get(id=product_id, company=company)
+                        
+                        # Parse unit cost
+                        unit_cost_str = request.POST.get(f'unit_cost_{product_id}', '0')
+                        try:
+                            unit_cost = float(unit_cost_str) if unit_cost_str else 0
+                        except ValueError:
+                            unit_cost = 0
+                        
+                        PurchaseOrderItem.objects.create(
+                            purchase_order=po,
+                            product=product,
+                            quantity_ordered=quantity,
+                            unit_cost=unit_cost
+                        )
+                        items_created += 1
+                        
+                    except Product.DoesNotExist:
+                        logger.error(f"Product {product_id} not found or doesn't belong to company {company.id}")
+                        continue
+                    except ValueError as e:
+                        logger.error(f"Invalid quantity for product {product_id}: {e}")
+                        continue
+                
+                if items_created == 0:
+                    raise ValueError('No valid items to add to purchase order')
+                
+                # Update PO status
+                po.status = 'SUBMITTED'
+                po.save()
+                
+                logger.info(f"Purchase order {po_number} created with {items_created} items")
+                return redirect('procurement:purchase_order_detail', po_id=po.id)
+                
+        except ValueError as e:
+            logger.error(f"Validation error creating purchase order: {e}")
+            return JsonResponse({'error': str(e)}, status=400)
+        except Exception as e:
+            logger.error(f"Error creating purchase order: {e}")
+            return JsonResponse({'error': 'Failed to create purchase order'}, status=500)
     
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
@@ -272,45 +335,64 @@ def quick_order(request, product_id):
     """Quick order for a single product"""
     if request.method == 'POST':
         company = request.user.company
-        product = get_object_or_404(Product, id=product_id, company=company)
         
-        # Get latest recommendation
-        recommendation = ProcurementRecommendation.objects.filter(
-            product=product
-        ).order_by('-analysis_date').first()
+        if not company:
+            return JsonResponse({'error': 'No company associated'}, status=400)
         
-        if not recommendation:
-            return JsonResponse({'error': 'No recommendation found'}, status=404)
-        
-        # Generate PO number
-        today = date.today()
-        po_count = PurchaseOrder.objects.filter(
-            company=company,
-            order_date=today
-        ).count()
-        po_number = f"PO-{today.strftime('%Y%m%d')}-{po_count + 1:03d}"
-        
-        # Create PO
-        po = PurchaseOrder.objects.create(
-            company=company,
-            po_number=po_number,
-            order_date=today,
-            expected_delivery=today + timedelta(days=14),
-            status='SUBMITTED'
-        )
-        
-        # Add item
-        PurchaseOrderItem.objects.create(
-            purchase_order=po,
-            product=product,
-            quantity_ordered=recommendation.recommended_quantity
-        )
-        
-        return JsonResponse({
-            'success': True,
-            'po_number': po_number,
-            'redirect_url': f'/procurement/orders/{po.id}/'
-        })
+        try:
+            # Verify product belongs to company
+            product = get_object_or_404(Product, id=product_id, company=company)
+            
+            # Get latest recommendation
+            recommendation = ProcurementRecommendation.objects.filter(
+                product=product
+            ).order_by('-analysis_date').first()
+            
+            if not recommendation:
+                return JsonResponse({'error': 'No recommendation found for this product'}, status=404)
+            
+            if recommendation.recommended_quantity <= 0:
+                return JsonResponse({'error': 'No quantity recommended for this product'}, status=400)
+            
+            with transaction.atomic():
+                # Generate PO number with lock
+                today = date.today()
+                po_count = PurchaseOrder.objects.select_for_update().filter(
+                    company=company,
+                    order_date=today
+                ).count()
+                
+                po_number = f"PO-{today.strftime('%Y%m%d')}-{po_count + 1:03d}"
+                
+                # Create PO
+                po = PurchaseOrder.objects.create(
+                    company=company,
+                    po_number=po_number,
+                    order_date=today,
+                    expected_delivery=today + timedelta(days=14),
+                    status='SUBMITTED'
+                )
+                
+                # Add item
+                PurchaseOrderItem.objects.create(
+                    purchase_order=po,
+                    product=product,
+                    quantity_ordered=recommendation.recommended_quantity
+                )
+                
+                logger.info(f"Quick order {po_number} created for {product.sku}")
+                
+                return JsonResponse({
+                    'success': True,
+                    'po_number': po_number,
+                    'redirect_url': f'/procurement/orders/{po.id}/'
+                })
+                
+        except Product.DoesNotExist:
+            return JsonResponse({'error': 'Product not found'}, status=404)
+        except Exception as e:
+            logger.error(f"Error creating quick order for product {product_id}: {e}")
+            return JsonResponse({'error': 'Failed to create order'}, status=500)
     
     return JsonResponse({'error': 'Invalid request'}, status=400)
 

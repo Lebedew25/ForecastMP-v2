@@ -225,12 +225,20 @@
                 <div class="flex space-x-2">
                     {% if recommendations.has_previous %}
                     <a href="?page={{ recommendations.previous_page_number }}" 
+                       hx-get="?page={{ recommendations.previous_page_number }}"
+                       hx-target="#buyingTableBody"
+                       hx-indicator="#loadingIndicator"
+                       hx-push-url="true"
                        class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                         {% trans "Назад" %}
                     </a>
                     {% endif %}
                     {% if recommendations.has_next %}
                     <a href="?page={{ recommendations.next_page_number }}"
+                       hx-get="?page={{ recommendations.next_page_number }}"
+                       hx-target="#buyingTableBody"
+                       hx-indicator="#loadingIndicator"
+                       hx-push-url="true"
                        class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                         {% trans "Вперед" %}
                     </a>

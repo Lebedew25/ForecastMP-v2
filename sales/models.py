@@ -280,6 +280,7 @@ class InventorySnapshot(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
+        unique_together = ['product', 'warehouse', 'snapshot_date']
         ordering = ['-snapshot_date']
         indexes = [
             models.Index(fields=['product', 'snapshot_date']),

@@ -52,7 +52,13 @@
     <!-- Forecast (30 days) -->
     <td class="px-6 py-4 whitespace-nowrap">
         <div class="flex flex-col">
-            <span class="text-sm text-gray-900">{{ rec.forecasted_demand|default:"—" }}</span>
+            {% with forecasted=rec.daily_burn_rate|floatformat:0|add:"0"|floatformat:0 %}
+            {% if rec.daily_burn_rate > 0 %}
+            <span class="text-sm text-gray-900">{% widthratio rec.daily_burn_rate 1 30 %} {% trans "шт" %}</span>
+            {% else %}
+            <span class="text-sm text-gray-900">—</span>
+            {% endif %}
+            {% endwith %}
             <span class="text-xs text-gray-500">{{ rec.daily_burn_rate|floatformat:1 }}/{% trans "день" %}</span>
         </div>
     </td>
