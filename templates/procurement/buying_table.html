@@ -89,10 +89,11 @@
         <div class="border-t border-gray-200 pt-6">
             <form 
                 id="filterForm"
-                hx-get="{% url 'procurement:buying_table' %}"
+                hx-get="{% url 'procurement:buying_table_rows' %}"
                 hx-target="#buyingTableBody"
-                hx-trigger="change"
+                hx-trigger="change delay:500ms"
                 hx-indicator="#loadingIndicator"
+                hx-push-url="true"
                 class="grid grid-cols-5 gap-4">
                 
                 <!-- Category Filter -->
@@ -225,7 +226,7 @@
                 <div class="flex space-x-2">
                     {% if recommendations.has_previous %}
                     <a href="?page={{ recommendations.previous_page_number }}" 
-                       hx-get="?page={{ recommendations.previous_page_number }}"
+                       hx-get="{% url 'procurement:buying_table_rows' %}?page={{ recommendations.previous_page_number }}"
                        hx-target="#buyingTableBody"
                        hx-indicator="#loadingIndicator"
                        hx-push-url="true"
@@ -234,8 +235,8 @@
                     </a>
                     {% endif %}
                     {% if recommendations.has_next %}
-                    <a href="?page={{ recommendations.next_page_number }}"
-                       hx-get="?page={{ recommendations.next_page_number }}"
+                    <a href="{% url 'procurement:buying_table_rows' %}?page={{ recommendations.next_page_number }}"
+                       hx-get="{% url 'procurement:buying_table_rows' %}?page={{ recommendations.next_page_number }}"
                        hx-target="#buyingTableBody"
                        hx-indicator="#loadingIndicator"
                        hx-push-url="true"

@@ -9,6 +9,7 @@ import csv
 import logging
 from .models import ProcurementRecommendation, PurchaseOrder, PurchaseOrderItem
 from products.models import Product
+from . import services
 
 logger = logging.getLogger(__name__)
 
@@ -127,75 +128,61 @@ def api_recommendations(request):
 
 @login_required
 def buying_table(request):
-    """Buying table with filters and bulk actions"""
+    """Buying table page view - returns the full page"""
     company = request.user.company
     today = date.today()
     
     if not company:
         return render(request, 'procurement/no_company.html')
     
-    # Get all recommendations for today
-    recommendations = ProcurementRecommendation.objects.filter(
-        product__company=company,
-        analysis_date=today
-    ).select_related('product')
+    # Get filters from request
+    filters = {
+        'category': request.GET.get('category'),
+        'supplier': request.GET.get('supplier'),
+        'health_status': request.GET.get('health_status'),
+        'search': request.GET.get('search'),
+    }
     
-    # Apply filters
-    category = request.GET.get('category')
-    if category:
-        recommendations = recommendations.filter(product__category=category)
+    # Get summary data
+    summary = services.get_buying_table_summary(company, filters)
     
-    supplier = request.GET.get('supplier')
-    if supplier:
-        recommendations = recommendations.filter(
-            product__attributes__supplier=supplier
-        )
+    # Get filter options
+    filter_options = services.get_buying_table_filters(company)
     
-    health_status = request.GET.get('health_status')
-    if health_status:
-        recommendations = recommendations.filter(action_category=health_status)
+    context = {
+        'summary': summary,
+        'categories': filter_options['categories'],
+        'suppliers': filter_options['suppliers'],
+    }
     
-    search = request.GET.get('search')
-    if search:
-        recommendations = recommendations.filter(
-            Q(product__sku__icontains=search) |
-            Q(product__name__icontains=search)
-        )
+    return render(request, 'procurement/buying_table.html', context)
+
+
+@login_required
+def buying_table_rows(request):
+    """HTMX endpoint - returns only the table rows"""
+    company = request.user.company
     
-    # Calculate summary stats with single optimized query
-    summary_result = recommendations.aggregate(
-        normal_count=Count(Case(When(action_category='NORMAL', then=1), output_field=IntegerField())),
-        attention_count=Count(Case(When(action_category='ATTENTION_REQUIRED', then=1), output_field=IntegerField())),
-        order_today_count=Count(Case(When(action_category='ORDER_TODAY', then=1), output_field=IntegerField())),
-        already_ordered_count=Count(Case(When(action_category='ALREADY_ORDERED', then=1), output_field=IntegerField())),
-    )
-    summary = summary_result
+    if not company:
+        return render(request, 'procurement/no_company.html')
     
-    # Get unique categories and suppliers for filters
-    categories = Product.objects.filter(
-        company=company,
-        category__isnull=False
-    ).values_list('category', flat=True).distinct().order_by('category')
+    # Get filters from request
+    filters = {
+        'category': request.GET.get('category'),
+        'supplier': request.GET.get('supplier'),
+        'health_status': request.GET.get('health_status'),
+        'search': request.GET.get('search'),
+    }
     
-    suppliers = []  # TODO: Get from product attributes or supplier model
-    
-    # Pagination
-    paginator = Paginator(recommendations.order_by('-priority_score'), 50)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+    # Get paginated data
+    page = request.GET.get('page', 1)
+    page_obj = services.get_buying_table_data(company, filters, page=page)
     
     context = {
         'recommendations': page_obj,
-        'summary': summary,
-        'categories': categories,
-        'suppliers': suppliers,
     }
     
-    # If HTMX request, return only table rows
-    if request.headers.get('HX-Request'):
-        return render(request, 'procurement/partials/buying_table_rows.html', context)
-    
-    return render(request, 'procurement/buying_table.html', context)
+    return render(request, 'procurement/partials/buying_table_rows.html', context)
 
 
 @login_required
@@ -403,25 +390,29 @@ def export_buying_table(request):
     company = request.user.company
     today = date.today()
     
+    # Get filters from request
+    filters = {
+        'category': request.GET.get('category'),
+        'health_status': request.GET.get('health_status'),
+        'search': request.GET.get('search'),
+    }
+    
+    # Apply same filters as buying_table view
     recommendations = ProcurementRecommendation.objects.filter(
         product__company=company,
         analysis_date=today
     ).select_related('product').order_by('-priority_score')
     
-    # Apply same filters as buying_table view
-    category = request.GET.get('category')
-    if category:
-        recommendations = recommendations.filter(product__category=category)
+    if filters['category']:
+        recommendations = recommendations.filter(product__category=filters['category'])
     
-    health_status = request.GET.get('health_status')
-    if health_status:
-        recommendations = recommendations.filter(action_category=health_status)
+    if filters['health_status']:
+        recommendations = recommendations.filter(action_category=filters['health_status'])
     
-    search = request.GET.get('search')
-    if search:
+    if filters['search']:
         recommendations = recommendations.filter(
-            Q(product__sku__icontains=search) |
-            Q(product__name__icontains=search)
+            Q(product__sku__icontains=filters['search']) |
+            Q(product__name__icontains=filters['search'])
         )
     
     # Create CSV
@@ -513,11 +504,54 @@ def purchase_orders(request):
         'stats': stats,
     }
     
-    # If HTMX request, return only table rows
-    if request.headers.get('HX-Request'):
-        return render(request, 'procurement/partials/purchase_orders_rows.html', context)
-    
     return render(request, 'procurement/purchase_orders.html', context)
+
+
+@login_required
+def purchase_orders_rows(request):
+    """HTMX endpoint - returns only the purchase orders table rows"""
+    company = request.user.company
+    
+    if not company:
+        return render(request, 'procurement/no_company.html')
+    
+    # Get all purchase orders
+    orders = PurchaseOrder.objects.filter(
+        company=company
+    ).prefetch_related('items')
+    
+    # Apply filters
+    status = request.GET.get('status')
+    if status:
+        orders = orders.filter(status=status)
+    
+    period = request.GET.get('period')
+    if period == 'today':
+        orders = orders.filter(order_date=date.today())
+    elif period == 'week':
+        week_ago = date.today() - timedelta(days=7)
+        orders = orders.filter(order_date__gte=week_ago)
+    elif period == 'month':
+        month_ago = date.today() - timedelta(days=30)
+        orders = orders.filter(order_date__gte=month_ago)
+    
+    search = request.GET.get('search')
+    if search:
+        orders = orders.filter(
+            Q(po_number__icontains=search) |
+            Q(supplier_name__icontains=search)
+        )
+    
+    # Pagination
+    paginator = Paginator(orders.order_by('-order_date'), 25)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'purchase_orders': page_obj,
+    }
+    
+    return render(request, 'procurement/partials/purchase_orders_rows.html', context)
 
 
 @login_required

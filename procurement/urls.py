@@ -8,7 +8,9 @@ urlpatterns = [
     path('test/', TemplateView.as_view(template_name='test_page.html'), name='test_page'),  # Test page
     path('', views.dashboard, name='dashboard'),
     path('buying-table/', views.buying_table, name='buying_table'),
+    path('buying-table/rows/', views.buying_table_rows, name='buying_table_rows'),
     path('orders/', views.purchase_orders, name='purchase_orders'),
+    path('orders/rows/', views.purchase_orders_rows, name='purchase_orders_rows'),
     path('orders/<uuid:po_id>/', views.purchase_order_detail, name='purchase_order_detail'),
     path('orders/<uuid:po_id>/update-status/', views.update_order_status, name='update_order_status'),
     path('product/<uuid:product_id>/', views.product_detail, name='product_detail'),
