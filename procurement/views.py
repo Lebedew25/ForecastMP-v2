@@ -148,11 +148,23 @@ def buying_table(request):
     
     # Get filter options
     filter_options = services.get_buying_table_filters(company)
+
+    # Get paginated data for initial render
+    page = request.GET.get('page', 1)
+    page_obj = services.get_buying_table_data(company, filters, page=page)
+
+    # HTMX requests should return only the rows
+    hx_request = request.headers.get('HX-Request') == 'true' or request.META.get('HTTP_HX_REQUEST') == 'true'
+    if hx_request:
+        return render(request, 'procurement/partials/buying_table_rows.html', {
+            'recommendations': page_obj,
+        })
     
     context = {
         'summary': summary,
         'categories': filter_options['categories'],
         'suppliers': filter_options['suppliers'],
+        'recommendations': page_obj,
     }
     
     return render(request, 'procurement/buying_table.html', context)

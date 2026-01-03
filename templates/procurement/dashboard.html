@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Procurement Dashboard" %}{% endblock %}
+
+{% block content %}
+<div class="max-w-screen-2xl mx-auto px-6 py-8">
+    <div class="mb-6">
+        <h1 class="text-2xl font-bold text-gray-900">{% trans "Procurement Dashboard" %}</h1>
+        <p class="text-sm text-gray-600">{% trans "Summary for today's recommendations." %}</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div class="bg-white rounded-lg shadow-soft p-4">
+            <div class="text-sm text-gray-500">{% trans "Order Today" %}</div>
+            <div class="text-2xl font-bold text-gray-900">{{ summary.order_today_count }}</div>
+        </div>
+        <div class="bg-white rounded-lg shadow-soft p-4">
+            <div class="text-sm text-gray-500">{% trans "Attention Required" %}</div>
+            <div class="text-2xl font-bold text-gray-900">{{ summary.attention_required_count }}</div>
+        </div>
+        <div class="bg-white rounded-lg shadow-soft p-4">
+            <div class="text-sm text-gray-500">{% trans "Already Ordered" %}</div>
+            <div class="text-2xl font-bold text-gray-900">{{ summary.already_ordered_count }}</div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-soft overflow-hidden">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">{% trans "Today's Recommendations" %}</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            {% trans "SKU" %}
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            {% trans "Product" %}
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            {% trans "Category" %}
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                            {% trans "Status" %}
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for rec in order_today %}
+                    <tr>
+                        <td class="px-6 py-3 text-sm text-gray-900">{{ rec.product.sku }}</td>
+                        <td class="px-6 py-3 text-sm text-gray-900">{{ rec.product.name }}</td>
+                        <td class="px-6 py-3 text-sm text-gray-700">{{ rec.product.category }}</td>
+                        <td class="px-6 py-3 text-sm text-red-600">{% trans "Order Today" %}</td>
+                    </tr>
+                    {% endfor %}
+                    {% for rec in attention_required %}
+                    <tr>
+                        <td class="px-6 py-3 text-sm text-gray-900">{{ rec.product.sku }}</td>
+                        <td class="px-6 py-3 text-sm text-gray-900">{{ rec.product.name }}</td>
+                        <td class="px-6 py-3 text-sm text-gray-700">{{ rec.product.category }}</td>
+                        <td class="px-6 py-3 text-sm text-yellow-600">{% trans "Attention Required" %}</td>
+                    </tr>
+                    {% endfor %}
+                    {% for rec in already_ordered %}
+                    <tr>
+                        <td class="px-6 py-3 text-sm text-gray-900">{{ rec.product.sku }}</td>
+                        <td class="px-6 py-3 text-sm text-gray-900">{{ rec.product.name }}</td>
+                        <td class="px-6 py-3 text-sm text-gray-700">{{ rec.product.category }}</td>
+                        <td class="px-6 py-3 text-sm text-gray-500">{% trans "Already Ordered" %}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if not order_today and not attention_required and not already_ordered %}
+                    <tr>
+                        <td class="px-6 py-6 text-center text-sm text-gray-500" colspan="4">
+                            {% trans "No recommendations for today." %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

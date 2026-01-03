@@ -4,8 +4,9 @@ Dashboard metrics calculation service
 import logging
 from typing import Dict, List, Any
 from datetime import datetime, timedelta
-from django.db.models import Sum, Avg, Count, Q, F, DecimalField, OuterRef, Subquery, Case, When, Value, FloatField
-from django.db.models.functions import Coalesce
+from django.utils import timezone
+from django.db.models import Sum, Avg, Count, Q, F, DecimalField, OuterRef, Subquery, Case, When, Value, FloatField, ExpressionWrapper, IntegerField
+from django.db.models.functions import Coalesce, Cast
 from products.models import Product
 from sales.models import SalesTransaction, InventorySnapshot
 from procurement.models import ProcurementRecommendation
@@ -37,17 +38,46 @@ class DashboardMetricsService:
             ).order_by('-snapshot_date').values('quantity_available')[:1]
             
             # Single aggregated query instead of N+1 loops
+            latest_qty_expr = Coalesce(
+                Subquery(latest_snapshot_subquery),
+                Value(0),
+                output_field=IntegerField()
+            )
+            week_ago_qty_expr = Coalesce(
+                Subquery(week_ago_snapshot_subquery),
+                Value(0),
+                output_field=IntegerField()
+            )
+            unit_cost_expr = Coalesce(
+                F('extended_attributes__cost_price'),
+                Value(0),
+                output_field=DecimalField(max_digits=10, decimal_places=2)
+            )
+
             result = Product.objects.filter(
                 company=self.company,
                 is_active=True
-            ).annotate(
-                latest_qty=Coalesce(Subquery(latest_snapshot_subquery), Value(0)),
-                week_ago_qty=Coalesce(Subquery(week_ago_snapshot_subquery), Value(0)),
-                current_value=F('latest_qty') * Coalesce(F('cost_price'), Value(0), output_field=DecimalField()),
-                previous_value=F('week_ago_qty') * Coalesce(F('cost_price'), Value(0), output_field=DecimalField())
             ).aggregate(
-                total_value=Coalesce(Sum('current_value'), Value(0)),
-                previous_value=Coalesce(Sum('previous_value'), Value(0)),
+                total_value=Coalesce(
+                    Sum(
+                        ExpressionWrapper(
+                            Cast(latest_qty_expr, DecimalField(max_digits=14, decimal_places=2)) * unit_cost_expr,
+                            output_field=DecimalField(max_digits=18, decimal_places=2)
+                        )
+                    ),
+                    Value(0),
+                    output_field=DecimalField(max_digits=18, decimal_places=2)
+                ),
+                previous_value=Coalesce(
+                    Sum(
+                        ExpressionWrapper(
+                            Cast(week_ago_qty_expr, DecimalField(max_digits=14, decimal_places=2)) * unit_cost_expr,
+                            output_field=DecimalField(max_digits=18, decimal_places=2)
+                        )
+                    ),
+                    Value(0),
+                    output_field=DecimalField(max_digits=18, decimal_places=2)
+                ),
                 product_count=Count('id')
             )
             
@@ -106,7 +136,7 @@ class DashboardMetricsService:
             products_data = Product.objects.filter(
                 company=self.company,
                 is_active=True,
-                salestransaction__sale_date__gte=thirty_days_ago
+                sales_transactions__sale_date__gte=thirty_days_ago
             ).distinct().annotate(
                 total_sales=Coalesce(Subquery(sales_subquery), Value(0)),
                 start_inv=Coalesce(Subquery(start_inventory_subquery), Value(0)),
@@ -289,7 +319,7 @@ class DashboardMetricsService:
         """Calculate forecast accuracy if sufficient history exists - OPTIMIZED"""
         try:
             # Need at least 14 days of data for meaningful accuracy calculation
-            two_weeks_ago = datetime.now() - timedelta(days=14)
+            two_weeks_ago = timezone.now() - timedelta(days=14)
             
             # Subquery for forecasted sales per product
             forecast_subquery = Forecast.objects.filter(
@@ -311,18 +341,29 @@ class DashboardMetricsService:
             products_data = Product.objects.filter(
                 company=self.company,
                 is_active=True,
-                forecasting_forecast__generated_at__gte=two_weeks_ago,
-                salestransaction__sale_date__gte=two_weeks_ago
+                forecasts__generated_at__gte=two_weeks_ago,
+                sales_transactions__sale_date__gte=two_weeks_ago
             ).distinct().annotate(
-                forecasted_sales=Coalesce(Subquery(forecast_subquery), Value(0.0)),
-                actual_sales=Coalesce(Subquery(actual_sales_subquery), Value(0.0))
+                forecasted_sales=Coalesce(
+                    Cast(Subquery(forecast_subquery), FloatField()),
+                    Value(0.0)
+                ),
+                actual_sales=Coalesce(
+                    Cast(Subquery(actual_sales_subquery), FloatField()),
+                    Value(0.0)
+                )
             ).filter(
                 actual_sales__gt=0,
                 forecasted_sales__gt=0
             ).annotate(
                 abs_error=Case(
-                    When(actual_sales__gt=0, 
-                         then=(F('forecasted_sales') - F('actual_sales')) * 100.0 / F('actual_sales')),
+                    When(
+                        actual_sales__gt=0,
+                        then=ExpressionWrapper(
+                            (F('forecasted_sales') - F('actual_sales')) * Value(100.0) / F('actual_sales'),
+                            output_field=FloatField()
+                        )
+                    ),
                     default=Value(0.0),
                     output_field=FloatField()
                 )
