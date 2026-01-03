@@ -34,3 +34,7 @@
 ## Security & Configuration Tips
 - Keep secrets in `.env`; do not commit real tokens or passwords.
 - For production-like runs, set `DEBUG=False` and point to PostgreSQL/Redis via environment variables.
+
+## Agent Instructions
+- Before starting any task, create a 5-7 step plan (or more if the task is complex) and follow it during execution.
+- Provide all intermediate explanations and final responses in Russian.
