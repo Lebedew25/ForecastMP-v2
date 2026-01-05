@@ -1,5 +1,6 @@
 import uuid
 from django.db import models
+from django.db.models import Q
 from django.conf import settings
 from products.models import Product
 from accounts.models import Company
@@ -93,6 +94,13 @@ class SalesTransaction(models.Model):
             models.Index(fields=['product', 'sale_date']),
             models.Index(fields=['marketplace', 'sale_date']),
             models.Index(fields=['product', 'marketplace', 'sale_date']),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['marketplace', 'transaction_reference'],
+                condition=~Q(transaction_reference=''),
+                name='unique_sales_transaction_reference'
+            ),
         ]
     
     def __str__(self):

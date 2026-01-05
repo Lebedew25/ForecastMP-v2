@@ -4,6 +4,7 @@
     hx-post="{% url 'procurement:submit_order' %}"
     hx-target="#createOrderModal"
     class="space-y-6">
+    {% csrf_token %}
     
     <!-- Order Details -->
     <div>

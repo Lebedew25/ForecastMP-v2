@@ -4,6 +4,7 @@ Celery tasks for marketplace synchronization
 from celery import shared_task
 from django.utils import timezone
 from datetime import datetime, timedelta, date
+from decimal import Decimal
 from .models import MarketplaceCredential, SyncLog
 from .clients import get_client
 from products.models import Product, MarketplaceProduct
@@ -171,6 +172,23 @@ def sync_sales(credential, client, start_date, end_date):
             else:
                 sale_date = sale_date_str
             
+            # Normalize values for idempotency
+            quantity = int(quantity or 0)
+            revenue_value = Decimal(str(revenue or 0))
+            transaction_reference = (
+                sale.get('id')
+                or sale.get('transaction_id')
+                or sale.get('order_id')
+                or sale.get('posting_number')
+                or ''
+            )
+
+            if not transaction_reference:
+                transaction_reference = (
+                    f"{credential.marketplace}:{external_id}:{sale_date.isoformat()}:"
+                    f"{quantity}:{revenue_value:.2f}"
+                )
+
             # Find product
             try:
                 mp_product = MarketplaceProduct.objects.get(
@@ -178,15 +196,17 @@ def sync_sales(credential, client, start_date, end_date):
                     external_id=external_id
                 )
                 
-                # Create sales transaction
-                SalesTransaction.objects.create(
-                    product=mp_product.product,
+                # Create or update sales transaction (idempotent)
+                SalesTransaction.objects.update_or_create(
                     marketplace=credential.marketplace,
-                    sale_date=sale_date,
-                    quantity=quantity,
-                    revenue=revenue,
-                    transaction_reference=sale.get('id', ''),
-                    metadata=sale
+                    transaction_reference=transaction_reference,
+                    defaults={
+                        'product': mp_product.product,
+                        'sale_date': sale_date,
+                        'quantity': quantity,
+                        'revenue': revenue_value,
+                        'metadata': sale,
+                    }
                 )
                 
                 count += 1
@@ -274,7 +294,6 @@ def update_daily_aggregates(company_id, start_date, end_date):
             )
             
             if not sales.exists():
-                current_date += timedelta(days=1)
                 continue
             
             total = sales.aggregate(

@@ -76,18 +76,21 @@
         }
 
         .htmx-indicator {
-            display: none;
+            display: none !important;
         }
 
         .htmx-request .htmx-indicator,
         .htmx-request.htmx-indicator {
-            display: flex;
+            display: flex !important;
         }
     </style>
     
     {% block extra_css %}{% endblock %}
 </head>
 <body class="bg-gray-bg min-h-screen">
+    <form id="csrf-token-form" style="display:none;">
+        {% csrf_token %}
+    </form>
     {% block body %}
     <!-- Main content area -->
     <div class="flex h-screen overflow-hidden">
@@ -119,6 +122,21 @@
     </div>
     {% endblock %}
     
+    <script>
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) {
+                return parts.pop().split(';').shift();
+            }
+            return '';
+        }
+
+        document.body.addEventListener('htmx:configRequest', function(event) {
+            event.detail.headers['X-CSRFToken'] = getCookie('csrftoken');
+        });
+    </script>
+
     {% block extra_js %}{% endblock %}
 </body>
 </html>

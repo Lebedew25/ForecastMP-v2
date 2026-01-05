@@ -64,3 +64,6 @@ htmlcov/
 *.bak
 *.orig
 .cache/
+
+# Node
+node_modules/
