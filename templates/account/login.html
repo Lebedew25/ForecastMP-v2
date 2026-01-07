@@ -75,7 +75,7 @@
                 <!-- Sign up link -->
                 <p class="text-center text-sm text-gray-600 mt-6">
                     {% trans "Нет аккаунта?" %}
-                    <a href="#" class="font-medium text-primary hover:text-primary-dark">
+                    <a href="{% url 'accounts:register' %}" class="font-medium text-primary hover:text-primary-dark">
                         {% trans "Зарегистрироваться" %}
                     </a>
                 </p>

@@ -10,7 +10,7 @@ from django.contrib.auth import get_user_model
 from datetime import date, timedelta
 from decimal import Decimal
 
-from accounts.models import Company
+from accounts.models import Company, Subscription
 from products.models import Product, MarketplaceProduct
 from procurement.models import ProcurementRecommendation, PurchaseOrder, PurchaseOrderItem
 from sales.models import DailySalesAggregate
@@ -249,6 +249,38 @@ class ProcurementUITests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'procurement/purchase_orders.html')
 
+
+
+class RegistrationUITests(TestCase):
+    """Tests for registration page"""
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_register_page_loads(self):
+        response = self.client.get(reverse('accounts:register'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'account/register.html')
+
+    def test_register_creates_user_company_and_subscription(self):
+        response = self.client.post(reverse('accounts:register'), {
+            'company_name': 'New Company',
+            'email': 'newuser@example.com',
+            'first_name': 'New',
+            'last_name': 'User',
+            'password1': 'StrongPass123!',
+            'password2': 'StrongPass123!',
+        })
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, reverse('onboarding:wizard'))
+        self.assertTrue('_auth_user_id' in self.client.session)
+
+        user = User.objects.get(email='newuser@example.com')
+        self.assertIsNotNone(user.company)
+        self.assertEqual(user.company.name, 'New Company')
+        subscription = Subscription.objects.get(company=user.company)
+        self.assertEqual(subscription.status, 'TRIAL')
 
 class LoginUITests(TestCase):
     """Тесты интерфейса авторизации"""
