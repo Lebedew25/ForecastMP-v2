@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.core.paginator import Paginator
@@ -334,6 +335,7 @@ def quick_order(request, product_id):
     """Quick order for a single product"""
     if request.method == 'POST':
         company = request.user.company
+        hx_request = request.headers.get('HX-Request') == 'true' or request.META.get('HTTP_HX_REQUEST') == 'true'
         
         if not company:
             return JsonResponse({'error': 'No company associated'}, status=400)
@@ -380,12 +382,13 @@ def quick_order(request, product_id):
                 )
                 
                 logger.info(f"Quick order {po_number} created for {product.sku}")
+                redirect_url = reverse('procurement:purchase_order_detail', kwargs={'po_id': po.id})
+                if hx_request:
+                    response = HttpResponse(status=204)
+                    response['HX-Redirect'] = redirect_url
+                    return response
                 
-                return JsonResponse({
-                    'success': True,
-                    'po_number': po_number,
-                    'redirect_url': f'/procurement/orders/{po.id}/'
-                })
+                return redirect(redirect_url)
                 
         except Product.DoesNotExist:
             return JsonResponse({'error': 'Product not found'}, status=404)

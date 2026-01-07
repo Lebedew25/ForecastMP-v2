@@ -5,13 +5,82 @@ from celery import shared_task
 from django.utils import timezone
 from datetime import datetime, timedelta, date
 from decimal import Decimal
+import hashlib
+import json
 from .models import MarketplaceCredential, SyncLog
 from .clients import get_client
 from products.models import Product, MarketplaceProduct
-from sales.models import SalesTransaction, InventorySnapshot, DailySalesAggregate
+from sales.models import SalesTransaction, InventorySnapshot, DailySalesAggregate, Warehouse
 import logging
 
 logger = logging.getLogger(__name__)
+
+def build_transaction_reference(marketplace, external_id, sale_date, quantity, revenue_value, sale):
+    reference = (
+        sale.get('id')
+        or sale.get('transaction_id')
+        or sale.get('order_id')
+        or sale.get('orderId')
+        or sale.get('posting_number')
+        or sale.get('srid')
+        or ''
+    )
+
+    if reference:
+        return str(reference)
+
+    payload = {
+        'marketplace': marketplace,
+        'external_id': external_id,
+        'sale_date': sale_date.isoformat(),
+        'quantity': quantity,
+        'revenue': f"{revenue_value:.2f}",
+        'sale': sale,
+    }
+    serialized = json.dumps(payload, sort_keys=True, default=str, ensure_ascii=True)
+    digest = hashlib.sha256(serialized.encode('utf-8')).hexdigest()
+    return f"hash:{digest}"
+
+def get_or_create_marketplace_warehouse(company, marketplace, external_warehouse_id, raw_data):
+    warehouse_code = str(external_warehouse_id or '').strip()
+    if not warehouse_code:
+        return None
+
+    existing = Warehouse.objects.filter(
+        company=company,
+        marketplace=marketplace,
+        metadata__external_warehouse_id=warehouse_code
+    ).first()
+    if existing:
+        return existing
+
+    name = f"{marketplace} #{warehouse_code}"
+    warehouse, created = Warehouse.objects.get_or_create(
+        company=company,
+        name=name,
+        defaults={
+            'warehouse_type': 'MARKETPLACE_FF',
+            'marketplace': marketplace,
+            'metadata': {
+                'external_warehouse_id': warehouse_code,
+                'source': 'marketplace_sync',
+                'raw': raw_data,
+            },
+        }
+    )
+
+    if not created and warehouse.metadata.get('external_warehouse_id') != warehouse_code:
+        warehouse.metadata = {
+            **warehouse.metadata,
+            'external_warehouse_id': warehouse_code,
+        }
+        if warehouse.marketplace != marketplace:
+            warehouse.marketplace = marketplace
+        if warehouse.warehouse_type != 'MARKETPLACE_FF':
+            warehouse.warehouse_type = 'MARKETPLACE_FF'
+        warehouse.save(update_fields=['metadata', 'marketplace', 'warehouse_type'])
+
+    return warehouse
 
 
 @shared_task
@@ -175,19 +244,14 @@ def sync_sales(credential, client, start_date, end_date):
             # Normalize values for idempotency
             quantity = int(quantity or 0)
             revenue_value = Decimal(str(revenue or 0))
-            transaction_reference = (
-                sale.get('id')
-                or sale.get('transaction_id')
-                or sale.get('order_id')
-                or sale.get('posting_number')
-                or ''
+            transaction_reference = build_transaction_reference(
+                credential.marketplace,
+                external_id,
+                sale_date,
+                quantity,
+                revenue_value,
+                sale
             )
-
-            if not transaction_reference:
-                transaction_reference = (
-                    f"{credential.marketplace}:{external_id}:{sale_date.isoformat()}:"
-                    f"{quantity}:{revenue_value:.2f}"
-                )
 
             # Find product
             try:
@@ -236,7 +300,7 @@ def sync_inventory(credential, client):
             external_id = inv.get('nmId') or inv.get('offer_id')
             quantity_available = inv.get('quantity') or inv.get('present', 0)
             quantity_reserved = inv.get('reserved', 0)
-            warehouse = inv.get('warehouse') or inv.get('warehouse_id', '')
+            warehouse_external_id = inv.get('warehouse') or inv.get('warehouse_id', '')
             
             if not external_id:
                 continue
@@ -246,14 +310,22 @@ def sync_inventory(credential, client):
                     marketplace=credential.marketplace,
                     external_id=external_id
                 )
+
+                warehouse = get_or_create_marketplace_warehouse(
+                    credential.company,
+                    credential.marketplace,
+                    warehouse_external_id,
+                    inv
+                )
                 
                 InventorySnapshot.objects.update_or_create(
                     product=mp_product.product,
                     snapshot_date=today,
-                    warehouse_id=warehouse,
+                    warehouse=warehouse,
                     defaults={
                         'quantity_available': quantity_available,
                         'quantity_reserved': quantity_reserved,
+                        'legacy_warehouse_id': str(warehouse_external_id or ''),
                         'warehouse_data': inv
                     }
                 )

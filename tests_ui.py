@@ -232,19 +232,13 @@ class ProcurementUITests(TestCase):
             reverse('procurement:quick_order', kwargs={'product_id': self.product1.id})
         )
         
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.status_code, 302)
         
-        # Проверяем что заказ создан
-        data = response.json()
-        self.assertTrue(data['success'])
-        self.assertIn('po_number', data)
-        
-        # Проверяем что заказ в БД
-        po = PurchaseOrder.objects.filter(
-            company=self.company,
-            po_number=data['po_number']
-        ).first()
-        self.assertIsNotNone(po)
+        po = PurchaseOrder.objects.filter(company=self.company).latest('created_at')
+        self.assertEqual(
+            response.url,
+            reverse('procurement:purchase_order_detail', kwargs={'po_id': po.id})
+        )
         self.assertEqual(po.items.count(), 1)
         
     def test_purchase_orders_page_loads(self):
@@ -477,6 +471,22 @@ class HTMXIntegrationTests(TestCase):
         # Должен быть использован частичный шаблон
         self.assertTemplateUsed(response, 'procurement/partials/buying_table_rows.html')
         
+    def test_quick_order_htmx_redirect(self):
+        """Test HX-Redirect for quick order"""
+        self.client.force_login(self.user)
+        
+        response = self.client.post(
+            reverse('procurement:quick_order', kwargs={'product_id': self.product.id}),
+            HTTP_HX_REQUEST='true'
+        )
+        
+        self.assertEqual(response.status_code, 204)
+        po = PurchaseOrder.objects.filter(company=self.company).latest('created_at')
+        self.assertEqual(
+            response['HX-Redirect'],
+            reverse('procurement:purchase_order_detail', kwargs={'po_id': po.id})
+        )
+
     def test_normal_request_returns_full_template(self):
         """Проверка что обычный запрос возвращает полный шаблон"""
         self.client.force_login(self.user)

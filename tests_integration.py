@@ -9,13 +9,31 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 from datetime import date, timedelta
 from decimal import Decimal
+from unittest.mock import patch
 
 from accounts.models import Company
-from products.models import Product
+from integrations.models import MarketplaceCredential
+from integrations.tasks import sync_sales, sync_inventory
+from products.models import Product, MarketplaceProduct
 from procurement.models import ProcurementRecommendation, PurchaseOrder, PurchaseOrderItem
-from sales.models import DailySalesAggregate
+from sales.models import DailySalesAggregate, SalesTransaction, InventorySnapshot
 
 User = get_user_model()
+
+class FakeSalesClient:
+    def __init__(self, sales):
+        self._sales = sales
+
+    def fetch_sales(self, start_date, end_date):
+        return self._sales
+
+
+class FakeInventoryClient:
+    def __init__(self, inventory):
+        self._inventory = inventory
+
+    def fetch_inventory(self):
+        return self._inventory
 
 
 class OrderCreationWorkflowTests(TestCase):
@@ -110,16 +128,92 @@ class OrderCreationWorkflowTests(TestCase):
             reverse('procurement:quick_order', kwargs={'product_id': self.products[0].id})
         )
         
-        self.assertEqual(response.status_code, 200)
-        data = response.json()
-        self.assertTrue(data['success'])
-        
-        # Проверяем переход на страницу деталей
-        po_id = data['redirect_url'].split('/')[-2]
+        self.assertEqual(response.status_code, 302)
+        po = PurchaseOrder.objects.filter(company=self.company).latest('created_at')
+        self.assertEqual(
+            response.url,
+            reverse('procurement:purchase_order_detail', kwargs={'po_id': po.id})
+        )
         response = self.client.get(
-            reverse('procurement:purchase_order_detail', kwargs={'po_id': po_id})
+            reverse('procurement:purchase_order_detail', kwargs={'po_id': po.id})
         )
         self.assertEqual(response.status_code, 200)
+
+
+class MarketplaceSyncTests(TestCase):
+    def setUp(self):
+        self.company = Company.objects.create(name="Sync Company")
+        self.product = Product.objects.create(
+            company=self.company,
+            sku="SYNC-001",
+            name="Sync Product"
+        )
+
+    def test_sync_sales_is_idempotent(self):
+        credential = MarketplaceCredential.objects.create(
+            company=self.company,
+            marketplace='OZON',
+            api_key='key',
+            api_secret='secret'
+        )
+        MarketplaceProduct.objects.create(
+            product=self.product,
+            marketplace='OZON',
+            external_id='123'
+        )
+
+        sale_date = date.today()
+        sales_data = [{
+            'nmId': '123',
+            'sale_date': sale_date.isoformat(),
+            'quantity': 2,
+            'revenue': '15.50',
+        }]
+        client = FakeSalesClient(sales_data)
+
+        with patch('integrations.tasks.update_daily_aggregates.delay'):
+            sync_sales(credential, client, sale_date, sale_date)
+            sync_sales(credential, client, sale_date, sale_date)
+
+        self.assertEqual(SalesTransaction.objects.count(), 1)
+        transaction = SalesTransaction.objects.first()
+        self.assertEqual(transaction.marketplace, 'OZON')
+        self.assertTrue(transaction.transaction_reference)
+
+    def test_sync_inventory_sets_warehouse_mapping(self):
+        credential = MarketplaceCredential.objects.create(
+            company=self.company,
+            marketplace='WILDBERRIES',
+            api_key='key',
+            api_secret='secret'
+        )
+        MarketplaceProduct.objects.create(
+            product=self.product,
+            marketplace='WILDBERRIES',
+            external_id='456'
+        )
+
+        inventory_data = [{
+            'nmId': '456',
+            'quantity': 7,
+            'reserved': 1,
+            'warehouse': 'WH-10',
+        }]
+        client = FakeInventoryClient(inventory_data)
+
+        sync_inventory(credential, client)
+
+        snapshot = InventorySnapshot.objects.get(
+            product=self.product,
+            snapshot_date=date.today()
+        )
+        self.assertIsNotNone(snapshot.warehouse)
+        self.assertEqual(snapshot.legacy_warehouse_id, 'WH-10')
+        self.assertEqual(snapshot.warehouse.marketplace, 'WILDBERRIES')
+        self.assertEqual(
+            snapshot.warehouse.metadata.get('external_warehouse_id'),
+            'WH-10'
+        )
 
 
 class FilterAndSearchWorkflowTests(TestCase):
