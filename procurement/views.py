@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse, HttpResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.core.paginator import Paginator
 from django.db.models import Q, Count, Case, When, IntegerField
 from django.db import transaction
@@ -465,8 +465,8 @@ def export_buying_table(request):
 
 
 @login_required
-def purchase_orders(request):
-    """Purchase orders list with filters"""
+def purchase_orders(request: HttpRequest) -> HttpResponse:
+    """Purchase orders list with filters."""
     company = request.user.company
     
     if not company:
@@ -518,13 +518,17 @@ def purchase_orders(request):
         'purchase_orders': page_obj,
         'stats': stats,
     }
-    
+
+    hx_request = request.headers.get('HX-Request') == 'true' or request.META.get('HTTP_HX_REQUEST') == 'true'
+    if hx_request:
+        return render(request, 'procurement/partials/purchase_orders_rows.html', context)
+
     return render(request, 'procurement/purchase_orders.html', context)
 
 
 @login_required
-def purchase_orders_rows(request):
-    """HTMX endpoint - returns only the purchase orders table rows"""
+def purchase_orders_rows(request: HttpRequest) -> HttpResponse:
+    """HTMX endpoint - returns only the purchase orders table rows."""
     company = request.user.company
     
     if not company:

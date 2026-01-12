@@ -1,14 +1,17 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% load i18n %}
 
 {% block title %}{% trans "Подписка и оплата" %}{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto px-6 py-8">
-    <h1 class="text-3xl font-bold text-gray-900 mb-8">{% trans "Подписка и оплата" %}</h1>
+<div class="max-w-5xl mx-auto px-6 py-8 space-y-6">
+    <div>
+        <div class="ui-kicker">{% trans "Биллинг" %}</div>
+        <h2 class="text-3xl font-bold text-gray-900 mt-2">{% trans "Подписка и оплата" %}</h2>
+    </div>
 
     <!-- Current Plan -->
-    <div class="bg-white rounded-lg shadow-soft p-8 mb-6">
+    <div class="ui-surface p-8">
         <div class="flex items-start justify-between mb-6">
             <div>
                 <h2 class="text-2xl font-bold text-gray-900 mb-2">
@@ -38,13 +41,13 @@
             </div>
             <a 
                 href="{% url 'accounts:pricing' %}"
-                class="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors shadow-soft">
+                class="ui-btn-primary">
                 {% trans "Изменить тариф" %}
             </a>
         </div>
 
         <!-- Usage Stats -->
-        <div class="grid grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="border-t border-gray-200 pt-6">
                 <div class="flex items-center justify-between mb-2">
                     <span class="text-sm font-medium text-gray-700">{% trans "Количество SKU" %}</span>
@@ -111,9 +114,9 @@
     </div>
 
     <!-- Plan Features -->
-    <div class="bg-white rounded-lg shadow-soft p-8 mb-6">
+    <div class="ui-surface p-8">
         <h3 class="text-lg font-semibold text-gray-900 mb-6">{% trans "Возможности тарифа" %}</h3>
-        <div class="grid grid-cols-2 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="flex items-center space-x-3">
                 {% if plan_limits.ai_forecasting %}
                 <svg class="w-5 h-5 text-success" fill="currentColor" viewBox="0 0 20 20">
@@ -177,17 +180,17 @@
     </div>
 
     <!-- Recent Invoices -->
-    <div class="bg-white rounded-lg shadow-soft p-8">
+    <div class="ui-surface p-8">
         <h3 class="text-lg font-semibold text-gray-900 mb-6">{% trans "История платежей" %}</h3>
         <div class="overflow-x-auto">
             <table class="min-w-full">
                 <thead>
                     <tr class="border-b border-gray-200">
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{% trans "Дата" %}</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{% trans "Описание" %}</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{% trans "Сумма" %}</th>
-                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">{% trans "Статус" %}</th>
-                        <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase">{% trans "Действия" %}</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{% trans "Дата" %}</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{% trans "Описание" %}</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{% trans "Сумма" %}</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{% trans "Статус" %}</th>
+                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase">{% trans "Действия" %}</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-200">
@@ -212,7 +215,7 @@
                             {% endif %}
                         </td>
                         <td class="px-4 py-3 text-right text-sm">
-                            <a href="#" class="text-primary hover:text-primary-dark">{% trans "Скачать" %}</a>
+                            <a href="{% url 'accounts:download_invoice' forloop.counter0 %}" class="text-orange-600 hover:text-orange-700">{% trans "Скачать" %}</a>
                         </td>
                     </tr>
                     {% empty %}

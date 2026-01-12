@@ -1,14 +1,15 @@
 """
 Views for inventory management API
 """
-from django.http import JsonResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.db.models import Q
-from django.shortcuts import render
+from django.shortcuts import redirect, render
+from django.contrib import messages
 import json
 from datetime import datetime, date
 from .inventory_service import (
@@ -18,6 +19,7 @@ from .inventory_service import (
     get_product_stock_history
 )
 from .models import InventoryMovement, Warehouse
+from .forms import WarehouseForm
 from products.models import Product
 from accounts.models import User
 import logging
@@ -537,8 +539,8 @@ class WebhookHandlerView(View):
 
 
 @login_required
-def warehouses(request):
-    """Display all warehouses for the company"""
+def warehouses(request: HttpRequest) -> HttpResponse:
+    """Display all warehouses for the company."""
     company = request.user.company
     
     if not company:
@@ -552,6 +554,30 @@ def warehouses(request):
     }
     
     return render(request, 'sales/warehouses.html', context)
+
+
+@login_required
+def create_warehouse(request: HttpRequest) -> HttpResponse:
+    """Create a new warehouse for the current company."""
+    company = request.user.company
+
+    if not company:
+        return render(request, 'procurement/no_company.html')
+
+    if request.method == 'POST':
+        form = WarehouseForm(request.POST)
+        if form.is_valid():
+            warehouse = form.save(commit=False)
+            warehouse.company = company
+            if warehouse.is_primary:
+                Warehouse.objects.filter(company=company, is_primary=True).update(is_primary=False)
+            warehouse.save()
+            messages.success(request, 'Склад успешно создан.')
+            return redirect('sales:warehouses')
+    else:
+        form = WarehouseForm()
+
+    return render(request, 'sales/warehouse_create.html', {'form': form})
 
 
 # Convenience view functions for URL routing

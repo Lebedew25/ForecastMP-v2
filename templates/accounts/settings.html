@@ -4,89 +4,90 @@
 {% block title %}{% trans "Настройки" %}{% endblock %}
 
 {% block content %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <div class="md:flex md:items-center md:justify-between mb-6">
-        <div class="flex-1 min-w-0">
-            <h1 class="text-2xl font-bold leading-7 text-gray-900 sm:text-3xl sm:truncate">
-                {% trans "Настройки" %}
-            </h1>
-        </div>
+<div class="max-w-6xl mx-auto px-6 py-8 space-y-8">
+    <div>
+        <div class="ui-kicker">{% trans "Профиль" %}</div>
+        <h2 class="text-3xl font-bold text-gray-900 mt-2">{% trans "Настройки" %}</h2>
     </div>
 
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
-        <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">
+    <div class="ui-surface overflow-hidden">
+        <div class="px-6 py-5 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">
                 {% trans "Общие настройки компании" %}
             </h3>
         </div>
-        <div class="px-4 py-5 sm:p-6">
+        <div class="px-6 py-6">
             {% if company %}
-            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                <div class="sm:col-span-3">
-                    <label for="company-name" class="block text-sm font-medium text-gray-700">
-                        {% trans "Название компании" %}
-                    </label>
-                    <div class="mt-1">
-                        <input type="text" name="company-name" id="company-name" 
-                               value="{{ company.name }}" 
-                               class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="company">
+                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                    <div class="sm:col-span-3">
+                        <label for="company-name" class="block text-xs font-semibold text-gray-500 uppercase">
+                            {% trans "Название компании" %}
+                        </label>
+                        <div class="mt-2">
+                            <input type="text" name="company_name" id="company-name" 
+                                   value="{{ company.name }}" 
+                                   class="block w-full border-gray-300 rounded-xl">
+                        </div>
+                    </div>
+
+                    <div class="sm:col-span-3">
+                        <label for="company-tax-id" class="block text-xs font-semibold text-gray-500 uppercase">
+                            {% trans "ИНН" %}
+                        </label>
+                        <div class="mt-2">
+                            <input type="text" name="company_tax_id" id="company-tax-id" 
+                                   value="{{ company_details.tax_id|default:'' }}" 
+                                   class="block w-full border-gray-300 rounded-xl">
+                        </div>
+                    </div>
+
+                    <div class="sm:col-span-6">
+                        <label for="company-address" class="block text-xs font-semibold text-gray-500 uppercase">
+                            {% trans "Адрес" %}
+                        </label>
+                        <div class="mt-2">
+                            <textarea id="company-address" name="company_address" rows="3" 
+                                      class="block w-full border-gray-300 rounded-xl">{{ company_details.address|default:'' }}</textarea>
+                        </div>
+                    </div>
+
+                    <div class="sm:col-span-3">
+                        <label for="company-phone" class="block text-xs font-semibold text-gray-500 uppercase">
+                            {% trans "Телефон" %}
+                        </label>
+                        <div class="mt-2">
+                            <input type="text" name="company_phone" id="company-phone" 
+                                   value="{{ company_details.phone|default:'' }}" 
+                                   class="block w-full border-gray-300 rounded-xl">
+                        </div>
+                    </div>
+
+                    <div class="sm:col-span-3">
+                        <label for="company-email" class="block text-xs font-semibold text-gray-500 uppercase">
+                            {% trans "Email" %}
+                        </label>
+                        <div class="mt-2">
+                            <input type="email" name="company_email" id="company-email" 
+                                   value="{{ company_details.email|default:'' }}" 
+                                   class="block w-full border-gray-300 rounded-xl">
+                        </div>
                     </div>
                 </div>
 
-                <div class="sm:col-span-3">
-                    <label for="company-tax-id" class="block text-sm font-medium text-gray-700">
-                        {% trans "ИНН" %}
-                    </label>
-                    <div class="mt-1">
-                        <input type="text" name="company-tax-id" id="company-tax-id" 
-                               value="{{ company.tax_id|default:'' }}" 
-                               class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
+                <div class="mt-8 border-t border-gray-200 pt-5">
+                    <div class="flex justify-end gap-3">
+                        <button type="reset" class="ui-btn-ghost">
+                            {% trans "Отмена" %}
+                        </button>
+                        <button type="submit" class="ui-btn-primary">
+                            {% trans "Сохранить" %}
+                        </button>
                     </div>
                 </div>
-
-                <div class="sm:col-span-6">
-                    <label for="company-address" class="block text-sm font-medium text-gray-700">
-                        {% trans "Адрес" %}
-                    </label>
-                    <div class="mt-1">
-                        <textarea id="company-address" name="company-address" rows="3" 
-                                  class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">{{ company.address|default:'' }}</textarea>
-                    </div>
-                </div>
-
-                <div class="sm:col-span-3">
-                    <label for="company-phone" class="block text-sm font-medium text-gray-700">
-                        {% trans "Телефон" %}
-                    </label>
-                    <div class="mt-1">
-                        <input type="text" name="company-phone" id="company-phone" 
-                               value="{{ company.phone|default:'' }}" 
-                               class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
-                    </div>
-                </div>
-
-                <div class="sm:col-span-3">
-                    <label for="company-email" class="block text-sm font-medium text-gray-700">
-                        {% trans "Email" %}
-                    </label>
-                    <div class="mt-1">
-                        <input type="email" name="company-email" id="company-email" 
-                               value="{{ company.email|default:'' }}" 
-                               class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
-                    </div>
-                </div>
-            </div>
-
-            <div class="mt-8 border-t border-gray-200 pt-5">
-                <div class="flex justify-end">
-                    <button type="button" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                        {% trans "Отмена" %}
-                    </button>
-                    <button type="button" class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                        {% trans "Сохранить" %}
-                    </button>
-                </div>
-            </div>
+            </form>
             {% else %}
             <div class="text-center py-8">
                 <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -99,118 +100,126 @@
         </div>
     </div>
 
-    <div class="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
-        <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">
+    <div class="ui-surface overflow-hidden">
+        <div class="px-6 py-5 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">
                 {% trans "Настройки пользователя" %}
             </h3>
         </div>
-        <div class="px-4 py-5 sm:p-6">
-            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                <div class="sm:col-span-3">
-                    <label for="user-first-name" class="block text-sm font-medium text-gray-700">
-                        {% trans "Имя" %}
-                    </label>
-                    <div class="mt-1">
-                        <input type="text" name="user-first-name" id="user-first-name" 
-                               value="{{ user.first_name }}" 
-                               class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
+        <div class="px-6 py-6">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="user">
+                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                    <div class="sm:col-span-3">
+                        <label for="user-first-name" class="block text-xs font-semibold text-gray-500 uppercase">
+                            {% trans "Имя" %}
+                        </label>
+                        <div class="mt-2">
+                            <input type="text" name="user_first_name" id="user-first-name" 
+                                   value="{{ user.first_name }}" 
+                                   class="block w-full border-gray-300 rounded-xl">
+                        </div>
+                    </div>
+
+                    <div class="sm:col-span-3">
+                        <label for="user-last-name" class="block text-xs font-semibold text-gray-500 uppercase">
+                            {% trans "Фамилия" %}
+                        </label>
+                        <div class="mt-2">
+                            <input type="text" name="user_last_name" id="user-last-name" 
+                                   value="{{ user.last_name }}" 
+                                   class="block w-full border-gray-300 rounded-xl">
+                        </div>
+                    </div>
+
+                    <div class="sm:col-span-6">
+                        <label for="user-email" class="block text-xs font-semibold text-gray-500 uppercase">
+                            {% trans "Email" %}
+                        </label>
+                        <div class="mt-2">
+                            <input type="email" name="user_email" id="user-email" 
+                                   value="{{ user.email }}" 
+                                   class="block w-full border-gray-300 rounded-xl">
+                        </div>
+                    </div>
+
+                    <div class="sm:col-span-6">
+                        <label for="user-phone" class="block text-xs font-semibold text-gray-500 uppercase">
+                            {% trans "Телефон" %}
+                        </label>
+                        <div class="mt-2">
+                            <input type="text" name="user_phone" id="user-phone" 
+                                   value="{{ user_phone|default:'' }}" 
+                                   class="block w-full border-gray-300 rounded-xl">
+                        </div>
                     </div>
                 </div>
 
-                <div class="sm:col-span-3">
-                    <label for="user-last-name" class="block text-sm font-medium text-gray-700">
-                        {% trans "Фамилия" %}
-                    </label>
-                    <div class="mt-1">
-                        <input type="text" name="user-last-name" id="user-last-name" 
-                               value="{{ user.last_name }}" 
-                               class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
+                <div class="mt-8 border-t border-gray-200 pt-5">
+                    <div class="flex justify-end gap-3">
+                        <button type="reset" class="ui-btn-ghost">
+                            {% trans "Отмена" %}
+                        </button>
+                        <button type="submit" class="ui-btn-primary">
+                            {% trans "Сохранить" %}
+                        </button>
                     </div>
                 </div>
-
-                <div class="sm:col-span-6">
-                    <label for="user-email" class="block text-sm font-medium text-gray-700">
-                        {% trans "Email" %}
-                    </label>
-                    <div class="mt-1">
-                        <input type="email" name="user-email" id="user-email" 
-                               value="{{ user.email }}" 
-                               class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
-                    </div>
-                </div>
-
-                <div class="sm:col-span-6">
-                    <label for="user-phone" class="block text-sm font-medium text-gray-700">
-                        {% trans "Телефон" %}
-                    </label>
-                    <div class="mt-1">
-                        <input type="text" name="user-phone" id="user-phone" 
-                               value="{{ user.profile.phone|default:'' }}" 
-                               class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
-                    </div>
-                </div>
-            </div>
-
-            <div class="mt-8 border-t border-gray-200 pt-5">
-                <div class="flex justify-end">
-                    <button type="button" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                        {% trans "Отмена" %}
-                    </button>
-                    <button type="button" class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                        {% trans "Сохранить" %}
-                    </button>
-                </div>
-            </div>
+            </form>
         </div>
     </div>
 
-    <div class="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
-        <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">
+    <div class="ui-surface overflow-hidden">
+        <div class="px-6 py-5 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">
                 {% trans "Настройки безопасности" %}
             </h3>
         </div>
-        <div class="px-4 py-5 sm:p-6">
-            <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                <div class="sm:col-span-6">
-                    <label for="current-password" class="block text-sm font-medium text-gray-700">
-                        {% trans "Текущий пароль" %}
-                    </label>
-                    <div class="mt-1">
-                        <input type="password" name="current-password" id="current-password" 
-                               class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
+        <div class="px-6 py-6">
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="password">
+                <div class="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
+                    <div class="sm:col-span-6">
+                        <label for="current-password" class="block text-xs font-semibold text-gray-500 uppercase">
+                            {% trans "Текущий пароль" %}
+                        </label>
+                        <div class="mt-2">
+                            <input type="password" name="current_password" id="current-password" 
+                                   class="block w-full border-gray-300 rounded-xl">
+                        </div>
+                    </div>
+
+                    <div class="sm:col-span-3">
+                        <label for="new-password" class="block text-xs font-semibold text-gray-500 uppercase">
+                            {% trans "Новый пароль" %}
+                        </label>
+                        <div class="mt-2">
+                            <input type="password" name="new_password" id="new-password" 
+                                   class="block w-full border-gray-300 rounded-xl">
+                        </div>
+                    </div>
+
+                    <div class="sm:col-span-3">
+                        <label for="confirm-password" class="block text-xs font-semibold text-gray-500 uppercase">
+                            {% trans "Подтвердите пароль" %}
+                        </label>
+                        <div class="mt-2">
+                            <input type="password" name="confirm_password" id="confirm-password" 
+                                   class="block w-full border-gray-300 rounded-xl">
+                        </div>
                     </div>
                 </div>
 
-                <div class="sm:col-span-3">
-                    <label for="new-password" class="block text-sm font-medium text-gray-700">
-                        {% trans "Новый пароль" %}
-                    </label>
-                    <div class="mt-1">
-                        <input type="password" name="new-password" id="new-password" 
-                               class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
+                <div class="mt-8 border-t border-gray-200 pt-5">
+                    <div class="flex justify-end">
+                        <button type="submit" class="ui-btn-primary">
+                            {% trans "Изменить пароль" %}
+                        </button>
                     </div>
                 </div>
-
-                <div class="sm:col-span-3">
-                    <label for="confirm-password" class="block text-sm font-medium text-gray-700">
-                        {% trans "Подтвердите пароль" %}
-                    </label>
-                    <div class="mt-1">
-                        <input type="password" name="confirm-password" id="confirm-password" 
-                               class="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 rounded-md">
-                    </div>
-                </div>
-            </div>
-
-            <div class="mt-8 border-t border-gray-200 pt-5">
-                <div class="flex justify-end">
-                    <button type="button" class="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary">
-                        {% trans "Изменить пароль" %}
-                    </button>
-                </div>
-            </div>
+            </form>
         </div>
     </div>
 </div>

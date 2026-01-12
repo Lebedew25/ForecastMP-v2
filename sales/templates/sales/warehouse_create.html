@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load i18n %}
+
+{% block title %}{% trans "Добавить склад" %}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto px-6 py-8 space-y-6">
+    <div>
+        <div class="ui-kicker">{% trans "Склад" %}</div>
+        <h2 class="text-3xl font-bold text-gray-900 mt-2">{% trans "Добавить склад" %}</h2>
+        <p class="text-sm text-gray-500 mt-2">{% trans "Создайте новый склад для учета запасов." %}</p>
+    </div>
+
+    <div class="ui-surface p-6">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div class="rounded-xl bg-red-50 text-red-700 px-4 py-3 text-sm">
+                {{ form.non_field_errors }}
+            </div>
+            {% endif %}
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-500 uppercase mb-2" for="{{ form.name.id_for_label }}">
+                    {% trans "Название" %}
+                </label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.name.errors|striptags }}</p>
+                {% endif %}
+            </div>
+
+            <div>
+                <label class="block text-xs font-semibold text-gray-500 uppercase mb-2" for="{{ form.warehouse_type.id_for_label }}">
+                    {% trans "Тип склада" %}
+                </label>
+                {{ form.warehouse_type }}
+                {% if form.warehouse_type.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.warehouse_type.errors|striptags }}</p>
+                {% endif %}
+            </div>
+
+            <div id="marketplaceField">
+                <label class="block text-xs font-semibold text-gray-500 uppercase mb-2" for="{{ form.marketplace.id_for_label }}">
+                    {% trans "Маркетплейс" %}
+                </label>
+                {{ form.marketplace }}
+                {% if form.marketplace.errors %}
+                <p class="mt-1 text-sm text-red-600">{{ form.marketplace.errors|striptags }}</p>
+                {% endif %}
+            </div>
+
+            <div class="flex items-center gap-3">
+                {{ form.is_primary }}
+                <label class="text-sm text-gray-700" for="{{ form.is_primary.id_for_label }}">
+                    {% trans "Сделать основным" %}
+                </label>
+            </div>
+
+            <div class="flex items-center justify-end gap-3">
+                <a href="{% url 'sales:warehouses' %}" class="ui-btn-ghost">{% trans "Отмена" %}</a>
+                <button type="submit" class="ui-btn-primary">{% trans "Сохранить" %}</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const typeField = document.getElementById('{{ form.warehouse_type.id_for_label }}');
+        const marketplaceField = document.getElementById('marketplaceField');
+
+        function updateMarketplaceVisibility() {
+            if (!typeField || !marketplaceField) {
+                return;
+            }
+            const showMarketplace = typeField.value === 'MARKETPLACE_FF';
+            marketplaceField.classList.toggle('hidden', !showMarketplace);
+        }
+
+        updateMarketplaceVisibility();
+        if (typeField) {
+            typeField.addEventListener('change', updateMarketplaceVisibility);
+        }
+    });
+</script>
+{% endblock %}

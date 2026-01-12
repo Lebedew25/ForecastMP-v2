@@ -1,10 +1,11 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.cache import never_cache
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.http import Http404, HttpRequest, HttpResponse
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.db import transaction
@@ -119,22 +120,118 @@ def user_logout(request):
 
 
 @login_required
-def settings_view(request):
-    """Settings page view"""
+def settings_view(request: HttpRequest) -> HttpResponse:
+    """Settings page view."""
     company = request.user.company
-    
+    company_details = {}
+    user_phone = ''
+
+    if company:
+        company_details = dict(company.settings or {})
+        user_settings = company_details.get('user_settings', {})
+        user_phone = user_settings.get(str(request.user.id), {}).get('phone', '')
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'company':
+            if not company:
+                messages.error(request, 'Компания не найдена.')
+                return redirect('accounts:settings')
+
+            company.name = (request.POST.get('company_name') or '').strip()
+            company_details['tax_id'] = (request.POST.get('company_tax_id') or '').strip()
+            company_details['address'] = (request.POST.get('company_address') or '').strip()
+            company_details['phone'] = (request.POST.get('company_phone') or '').strip()
+            company_details['email'] = (request.POST.get('company_email') or '').strip()
+            company.settings = company_details
+            company.save(update_fields=['name', 'settings', 'updated_at'])
+            messages.success(request, 'Настройки компании сохранены.')
+            return redirect('accounts:settings')
+
+        if action == 'user':
+            user = request.user
+            email = (request.POST.get('user_email') or '').strip().lower()
+
+            if email and User.objects.exclude(id=user.id).filter(email=email).exists():
+                messages.error(request, 'Пользователь с таким email уже существует.')
+                return redirect('accounts:settings')
+
+            user.first_name = (request.POST.get('user_first_name') or '').strip()
+            user.last_name = (request.POST.get('user_last_name') or '').strip()
+            if email:
+                user.email = email
+            user.save(update_fields=['first_name', 'last_name', 'email'])
+
+            phone = (request.POST.get('user_phone') or '').strip()
+            if company:
+                company_details = dict(company.settings or {})
+                user_settings = company_details.get('user_settings', {})
+                user_settings[str(user.id)] = {'phone': phone}
+                company_details['user_settings'] = user_settings
+                company.settings = company_details
+                company.save(update_fields=['settings', 'updated_at'])
+
+            messages.success(request, 'Настройки пользователя сохранены.')
+            return redirect('accounts:settings')
+
+        if action == 'password':
+            current_password = request.POST.get('current_password') or ''
+            new_password = request.POST.get('new_password') or ''
+            confirm_password = request.POST.get('confirm_password') or ''
+
+            if not request.user.check_password(current_password):
+                messages.error(request, 'Текущий пароль неверный.')
+                return redirect('accounts:settings')
+
+            if new_password != confirm_password:
+                messages.error(request, 'Пароли не совпадают.')
+                return redirect('accounts:settings')
+
+            try:
+                validate_password(new_password, user=request.user)
+            except ValidationError as exc:
+                messages.error(request, ' '.join(exc.messages))
+                return redirect('accounts:settings')
+
+            request.user.set_password(new_password)
+            request.user.save(update_fields=['password'])
+            update_session_auth_hash(request, request.user)
+            messages.success(request, 'Пароль успешно обновлен.')
+            return redirect('accounts:settings')
+
     context = {
         'company': company,
+        'company_details': company_details,
+        'user_phone': user_phone,
     }
-    
+
     return render(request, 'accounts/settings.html', context)
 
 
+def _get_mock_invoices() -> list[dict[str, str | date]]:
+    """Return mock invoice data for the subscription page."""
+    return [
+        {
+            'invoice_date': date(2023, 11, 1),
+            'description': 'Pro Plan (November 2023)',
+            'amount': '14990',
+            'status': 'PAID',
+        },
+        {
+            'invoice_date': date(2023, 10, 1),
+            'description': 'Pro Plan (October 2023)',
+            'amount': '14990',
+            'status': 'PAID',
+        },
+    ]
+
+
 @login_required
-def subscription_view(request):
-    """Subscription page view"""
+def subscription_view(request: HttpRequest) -> HttpResponse:
+    """Subscription page view."""
     company = request.user.company
-    
+
     # Mock data for subscription info
     subscription = {
         'plan': 'PRO',
@@ -143,7 +240,7 @@ def subscription_view(request):
         'current_period_end': '2024-12-31',
         'trial_end': None,
     }
-    
+
     # Mock data for plan limits
     plan_limits = {
         'max_skus': 2000,
@@ -154,39 +251,45 @@ def subscription_view(request):
         'api_access': True,
         'white_label': True,
     }
-    
+
     # Mock data for usage
     usage = {
         'sku_count': 1250,
         'integration_count': 3,
         'warehouse_count': 5,
     }
-    
-    # Mock data for invoices
-    invoices = [
-        {
-            'invoice_date': '2023-11-01',
-            'description': 'Pro Plan (November 2023)',
-            'amount': '14990',
-            'status': 'PAID',
-        },
-        {
-            'invoice_date': '2023-10-01',
-            'description': 'Pro Plan (October 2023)',
-            'amount': '14990',
-            'status': 'PAID',
-        }
-    ]
-    
+
     context = {
         'company': company,
         'subscription': subscription,
         'plan_limits': plan_limits,
         'usage': usage,
-        'invoices': invoices,
+        'invoices': _get_mock_invoices(),
     }
-    
+
     return render(request, 'accounts/subscription.html', context)
+
+
+@login_required
+def download_invoice(request: HttpRequest, invoice_idx: int) -> HttpResponse:
+    """Return a downloadable invoice file for the mock invoice data."""
+    invoices = _get_mock_invoices()
+    if invoice_idx < 0 or invoice_idx >= len(invoices):
+        raise Http404('Invoice not found')
+
+    invoice = invoices[invoice_idx]
+    invoice_date = invoice['invoice_date']
+    filename = f"invoice_{invoice_date:%Y-%m-%d}.txt"
+    content = (
+        f"Invoice: {invoice['description']}\n"
+        f"Date: {invoice_date:%Y-%m-%d}\n"
+        f"Amount: {invoice['amount']} RUB\n"
+        f"Status: {invoice['status']}\n"
+    )
+
+    response = HttpResponse(content, content_type='text/plain; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename=\"{filename}\"'
+    return response
 
 
 def pricing_view(request):

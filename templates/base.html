@@ -15,14 +15,14 @@
             theme: {
                 extend: {
                     colors: {
-                        primary: '#1890FF',
-                        'primary-dark': '#096DD9',
-                        'primary-darker': '#0050B3',
+                        primary: '#F97316',
+                        'primary-dark': '#EA580C',
+                        'primary-darker': '#C2410C',
                         success: '#52C41A',
                         danger: '#F5222D',
                         warning: '#FA8C16',
                         neutral: '#BFBFBF',
-                        'gray-bg': '#F5F5F5',
+                        'gray-bg': '#F6F7F9',
                     },
                     boxShadow: {
                         'soft': '0 2px 8px rgba(0, 0, 0, 0.08)',
@@ -40,10 +40,10 @@
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.3/dist/cdn.min.js"></script>
     
-    <!-- Google Fonts - Inter -->
+    <!-- Google Fonts - IBM Plex -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     
     <!-- Custom CSS -->
     <style>
@@ -52,8 +52,91 @@
             display: none !important;
         }
         
+        :root {
+            --ink: #111827;
+            --steel: #374151;
+            --fog: #E5E7EB;
+            --signal: #F97316;
+            --signal-strong: #EA580C;
+            --panel: #FFFFFF;
+            --canvas: #F6F7F9;
+        }
+
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--canvas);
+            background-image:
+                linear-gradient(transparent 23px, rgba(17, 24, 39, 0.04) 24px),
+                linear-gradient(90deg, transparent 23px, rgba(17, 24, 39, 0.04) 24px);
+            background-size: 24px 24px;
+        }
+
+        .font-mono-plex {
+            font-family: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+        }
+
+        h1, h2, h3 {
+            letter-spacing: 0.01em;
+        }
+
+        .ui-surface {
+            background: var(--panel);
+            border: 1px solid #E5E7EB;
+            border-radius: 16px;
+            box-shadow: 0 2px 12px rgba(15, 23, 42, 0.06);
+        }
+
+        .ui-kicker {
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
+            font-size: 11px;
+            font-weight: 600;
+            color: #9CA3AF;
+        }
+
+        .ui-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(249, 115, 22, 0.2);
+            color: #C2410C;
+            background: rgba(249, 115, 22, 0.08);
+        }
+
+        .ui-btn-primary {
+            background: #F97316;
+            color: #FFFFFF;
+            border-radius: 12px;
+            font-weight: 600;
+            padding: 10px 18px;
+            box-shadow: 0 10px 24px rgba(249, 115, 22, 0.2);
+        }
+
+        .ui-btn-primary:hover {
+            background: #EA580C;
+        }
+
+        .ui-btn-ghost {
+            border: 1px solid #D1D5DB;
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-weight: 500;
+            color: #374151;
+            background: #FFFFFF;
+        }
+
+        .ui-btn-ghost:hover {
+            border-color: #9CA3AF;
+        }
+
+        input, select, textarea {
+            border-radius: 12px;
+            border: 1px solid #D1D5DB;
+            background: #FFFFFF;
         }
         
         /* Custom scrollbar */

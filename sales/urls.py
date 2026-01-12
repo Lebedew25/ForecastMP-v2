@@ -9,6 +9,7 @@ app_name = 'sales'
 urlpatterns = [
     # Warehouse management page
     path('warehouses/', views.warehouses, name='warehouses'),
+    path('warehouses/create/', views.create_warehouse, name='warehouse_create'),
     
     # Inventory management API endpoints
     path('api/inventory/adjust/', views.inventory_adjustment, name='inventory_adjustment'),

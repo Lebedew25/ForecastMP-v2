@@ -554,8 +554,9 @@ class ResponsiveUITests(TestCase):
         
         # Проверяем наличие Tailwind адаптивных классов
         self.assertContains(response, 'grid-cols-1')
-        self.assertContains(response, 'md:grid-cols-2')
-        self.assertContains(response, 'lg:grid-cols-4')
+        self.assertContains(response, 'md:grid-cols-3')
+        self.assertContains(response, 'lg:grid-cols-3')
+        self.assertContains(response, 'md:grid-cols-4')
         
     def test_buying_table_contains_responsive_classes(self):
         """Проверка наличия классов адаптивности в таблице закупок"""
